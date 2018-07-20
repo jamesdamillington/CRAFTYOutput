@@ -3,6 +3,9 @@
 
 rm(list=ls())
 
+#this directory should exist and contain the CRAFTYmunisServCap.csv
+run_name <- "test"
+
 #script assumes there are three calibration years (2005, 2010, 2015); edit next line if that is not correct
 calib_yrs <- c(2005, 2010, 2015)
 
@@ -15,8 +18,8 @@ library(diffeR)  #for map comparison
 library(gridExtra)  #for printing tables to pdf
 library(grid)
 
-#output variables
-output_name <- "PDF/LCcomparisonAnalysis.pdf"
+#output variables)
+output_name <- paste0("Data/",run_name,"/LCcomparisonAnalysis.pdf")
 
 
 if(pdfprint) {
@@ -24,7 +27,7 @@ if(pdfprint) {
 }
 
 
-cDat <- readr::read_csv("Data/CRAFTYmunisLC.csv")
+cDat <- readr::read_csv(paste0("Data/",run_name,"/CRAFTYmunisLC.csv"))
 
 
 ## Mode analysis
@@ -55,7 +58,7 @@ if(pdfprint) {
 
 #could create a table subset here of munis that do not match?
 
-
+summary(cDat)
 LCnames <- c("Nat", "OtherAgri", "Agri", "Other", "Pasture")  #used to label error matrix in loop below
 
 yr <- 2005
