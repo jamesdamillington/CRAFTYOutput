@@ -36,13 +36,13 @@ getLCs <- function(data)
   #calculates proportion of each LC in the muni (ignoring NAs, help from https://stackoverflow.com/a/44290753)
   data %>%
     group_by(muniID) %>%
-    dplyr::summarise(LC1 = round(sum(lc2000 == 1, na.rm = T) / sum(!is.na(lc2000)), 3),
-                     LC2 = round(sum(lc2000 == 2, na.rm = T) / sum(!is.na(lc2000)), 3),
-                     LC3 = round(sum(lc2000 == 3, na.rm = T) / sum(!is.na(lc2000)), 3),
-                     LC4 = round(sum(lc2000 == 4, na.rm = T) / sum(!is.na(lc2000)), 3),
-                     LC5 = round(sum(lc2000 == 5, na.rm = T) / sum(!is.na(lc2000)), 3),
-                     NonNAs = sum(!is.na(lc2000)),
-                     NAs = sum(is.na(lc2000))
+    dplyr::summarise(LC1 = round(sum(lc == 1, na.rm = T) / sum(!is.na(lc)), 3),
+                     LC2 = round(sum(lc == 2, na.rm = T) / sum(!is.na(lc)), 3),
+                     LC3 = round(sum(lc == 3, na.rm = T) / sum(!is.na(lc)), 3),
+                     LC4 = round(sum(lc == 4, na.rm = T) / sum(!is.na(lc)), 3),
+                     LC5 = round(sum(lc == 5, na.rm = T) / sum(!is.na(lc)), 3),
+                     NonNAs = sum(!is.na(lc)),
+                     NAs = sum(is.na(lc))
     ) -> LCs
 
   return(LCs)
@@ -64,16 +64,20 @@ getLCs <- function(data)
 #writeRaster(munis.r.new, "Raster/sim10_BRmunis_latlon_5km_2018-03-21", format = 'ascii')
 # ######
 
-#load the rasters
-munis.r <- raster("Raster/sim10_BRmunis_latlon_5km_2018-04-27.asc")
 
-calib_yrs <- seq(2000, 2016, 1)
+input_path <- "C:/Users/k1076631/Google Drive/Shared/Crafty Telecoupling/Data/"
+classification <- "PastureB"
+
+#load the rasters
+munis.r <- raster(paste0(input_path,"CRAFTYInput/Data/sim10_BRmunis_latlon_5km_2018-04-27.asc"))
+
+calib_yrs <- seq(2000, 2015, 1)
 #calib_yrs <- c(2000, 2005)
 
 for(yr in calib_yrs){
 
-  inname <- paste0("Raster/brazillc_",yr,"_int_reclass_5km_txt_pasture.txt")
-  outname <- paste0("SummaryTables/LCs",yr,".csv")
+  inname <- paste0(input_path,"LandCover/MapBiomas23/ClassificationComparison/ASCII/brazillc_",yr,"_",classification,".asc")
+  outname <- paste0("Data/SummaryTables/LCs",yr,"_",classification,".csv")
   
   lc <- raster(inname)
 

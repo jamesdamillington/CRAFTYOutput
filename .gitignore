@@ -3,3 +3,7 @@
 .RData
 .Ruserdata
 CRAFTYOutput.Rproj
+
+*.csv
+*.ini
+*.asc
