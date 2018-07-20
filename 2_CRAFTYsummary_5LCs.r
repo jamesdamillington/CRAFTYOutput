@@ -13,6 +13,9 @@
 
 rm(list=ls())
 
+#this directory should exist and contain the output files and region file from the run being examined
+run_name <- "test"
+
 #required packages
 library(tidyverse)
 
@@ -93,17 +96,19 @@ getFRs <- function(data)
   return(FRs)
 }
 
+
+
 #output variables
-SC_name <- "Data/CRAFTYmunisServCap.csv"  #output file name for services and capitals
-LC_name <- "Data/CRAFTYmunisLC.csv"  #output file name for land cover data 
+SC_name <- paste0("Data/",run_name,"/CRAFTYmunisServCap.csv")  #output file name for services and capitals
+LC_name <- paste0("Data/",run_name,"/CRAFTYmunisLC.csv")  #output file name for land cover data 
 
 #load the region file (used to match each cell to a municipality)
-region <- read.csv("Data/region.csv")
+region <- read.csv(paste0("Data/",run_name,"/region.csv"))
 
 #Load model output data
-output2005 <- read.csv("Data/Brazil-0-0-Unknown-Cell-2005.csv")
-output2010 <- read.csv("Data/Brazil-0-0-Unknown-Cell-2010.csv")
-output2015 <- read.csv("Data/Brazil-0-0-Unknown-Cell-2015.csv")
+output2005 <- read.csv(paste0("Data/",run_name,"/Brazil-0-0-Unknown-Cell-2005.csv"))
+output2010 <- read.csv(paste0("Data/",run_name,"/Brazil-0-0-Unknown-Cell-2010.csv"))
+output2015 <- read.csv(paste0("Data/",run_name,"/Brazil-0-0-Unknown-Cell-2015.csv"))
 
 #load empirical map summary data (created using summarise_LCmaps.r)
 lc2005 <- read.csv("Data/SummaryTables/LCs2005_PastureB.csv", header = T)
@@ -168,9 +173,9 @@ FRs2015 <- getFRs(output2015)
 
 #subset to get only the FR combos that indicate a specific land cover for municipalities
 selectedFRs <- c("muniID","FR123", "FR45", "FR6", "FR7", "FR8") #JM! check this works
-mapFRs2005 <- select(FRs2005, selectedFRs)
-mapFRs2010 <- select(FRs2010, selectedFRs)
-mapFRs2015 <- select(FRs2015, selectedFRs)
+mapFRs2005 <- dplyr::select(FRs2005, selectedFRs)
+mapFRs2010 <- dplyr::select(FRs2010, selectedFRs)
+mapFRs2015 <- dplyr::select(FRs2015, selectedFRs)
 
 #join mapbiomas (lc2000) and CRAFTY output (mapFRs) summary tables together
 lcDat2005 <- left_join(mapFRs2005, lc2005, by = "muniID")
@@ -217,7 +222,7 @@ lcDat <- mutate(lcDat, ObsMode = as.integer(substring(oM, 4)))
 
 #drop column that had letters in
 lcDat <- lcDat %>%
-  select(-c(mM,oM))
+  dplyr::select(-c(mM,oM))
 
 #comparison of modelled mode vs observed mode (TRUE/FALSE)
 lcDat <- lcDat[!is.na(lcDat$ObsMode),]
