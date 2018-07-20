@@ -106,9 +106,9 @@ output2010 <- read.csv("Data/Brazil-0-0-Unknown-Cell-2010.csv")
 output2015 <- read.csv("Data/Brazil-0-0-Unknown-Cell-2015.csv")
 
 #load empirical map summary data (created using summarise_LCmaps.r)
-lc2005 <- read.csv("SummaryTables/LCs2005.csv", header = T)
-lc2010 <- read.csv("SummaryTables/LCs2010.csv", header = T)
-lc2015 <- read.csv("SummaryTables/LCs2015.csv", header = T)
+lc2005 <- read.csv("Data/SummaryTables/LCs2005_PastureB.csv", header = T)
+lc2010 <- read.csv("Data/SummaryTables/LCs2010_PastureB.csv", header = T)
+lc2015 <- read.csv("Data/SummaryTables/LCs2015_PastureB.csv", header = T)
 
 #create df containing only cell and muni data (rename columns) 
 munis<-data.frame(region$X, region$Y, region$muniID)
