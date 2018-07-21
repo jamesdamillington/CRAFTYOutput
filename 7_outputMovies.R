@@ -23,10 +23,6 @@ library(tidyverse)
 library(rasterVis)
 library(gridExtra)
 library(RColorBrewer)
-  
-#Load model output data
-output2005 <- read_csv(paste0("Data/",run_name,"/Brazil-0-0-Unknown-Cell-2005.csv"))
-
 
 
 outputRaster <- function(data, variable){
@@ -41,49 +37,88 @@ outputRaster <- function(data, variable){
 }
 
 
-LU <- outputRaster(output2005, "LandUseIndex")
-Agri <- outputRaster(output2005, "Capital:Agriculture")
-Nat <- outputRaster(output2005, "Capital:Nature")
-Infra <- outputRaster(output2005, "Capital:Infrastructure")
-OAg <- outputRaster(output2005, "Capital:Other Agriculture")
-Aces <- outputRaster(output2005, "Capital:Acessibility")
+plot_yrs <- seq(2000, 2002, 1)
+scenario <- "Testing-0-0"
 
-
-pl <- list()
-
-#add categories for later plotting etc. (see https://stackoverflow.com/a/37214431)
-LU <- ratify(LU)     #tell R that the map raster is categorical 
-rat <- levels(LU)[[1]]    #apply the levels (i.e. categories) 
-labs <- c("Soy", "Maize", "Double Cropping", "Second N", "Pristine N", "OAgri", "Other", "Pasture")
-rat$LandUse <- labs  
-levels(LU) <- rat 
-
-LUcols <- c('wheat1', 'wheat2', 'wheat3', 'darkgreen', 'forestgreen', 'gray', 'black', 'orange2')
+for(i in seq_along(plot_yrs)){
   
-pl[[1]] <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = "Land Use")  
+  #Load model output data
+  output <- read_csv(paste0("Data/",run_name,"/",scenario,"-Cell-",plot_yrs[i],".csv"))
+  
+  LU <- outputRaster(output, "LandUseIndex")
+  Agri <- outputRaster(output, "Capital:Agriculture")
+  Nat <- outputRaster(output, "Capital:Nature")
+  Infra <- outputRaster(output, "Capital:Infrastructure")
+  OAg <- outputRaster(output, "Capital:Other Agriculture")
+  Aces <- outputRaster(output, "Capital:Acessibility")
+  
+  pl <- list()  #this will hold the plots for ths year
+  
+  #add categories for later plotting etc. (see https://stackoverflow.com/a/37214431)
+  LU <- ratify(LU)     #tell R that the map raster is categorical 
+  rat <- levels(LU)[[1]]    #apply the levels (i.e. categories) 
 
+  #not all LUs may be present so need to create labels and colours dynamically
+  uLU <- unique(LU)  
+  labs <- c()
+  LUcols <- c()
+  
+  if(0 %in% uLU) { 
+    labs <- c(labs, "Soy") 
+    LUcols <- c(LUcols, 'wheat1')}
+  if(1 %in% uLU) { 
+    labs <- c(labs, "Maize") 
+    LUcols <- c(LUcols, 'wheat2')}
+  if(2 %in% uLU) { 
+    labs <- c(labs, "Double Cropping") 
+    LUcols <- c(LUcols, 'wheat3')}
+  if(3 %in% uLU) { 
+    labs <- c(labs, "Second N") 
+    LUcols <- c(LUcols, 'darkgreen')}
+  if(4 %in% uLU) { 
+    labs <- c(labs, "Pristine N") 
+    LUcols <- c(LUcols, 'forestgreen')}
+  if(5 %in% uLU) { 
+    labs <- c(labs, "OAgri") 
+    LUcols <- c(LUcols, 'gray')}
+  if(6 %in% uLU) { 
+    labs <- c(labs, "Other") 
+    LUcols <- c(LUcols, 'black')}
+  if(7 %in% uLU) { 
+    labs <- c(labs, "Pasture") 
+    LUcols <- c(LUcols, 'orange2')}
 
-pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
+  rat$LandUse <- labs  
+  levels(LU) <- rat 
 
-rl <- list(Agri, Nat, Infra, OAg, Aces)
-rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C") 
+  #create the LU plot and add to the list
+  pl[[1]] <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = "Land Use")  
+  ggsave(paste0("LUplot",plot_yrs[i],".jpg"), plot = arrangeGrob(pl[[1]]), width=15, height=15, units="cm", dpi = 300)
 
-for(i in seq_along(rl)){
+  #now create Capital maps (all with same palette)
+  pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
+  
+  rl <- list(Agri, Nat, Infra, OAg, Aces)
+  rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C") 
+  
+  for(j in seq_along(rl)){
+    
+    #create the plot
+    p <- levelplot(rl[[j]],
+    col.regions=pal, 
+    contour=F, 
+    margin=F,
+    main = (rl_names[j]))
+  
+    #add it to the list
+    pl[[j+1]] <- p    #+1 because LU is in furst slot
+  }
+  
+  mp <- marrangeGrob(pl, nrow = 3, ncol = 2, top = paste0(plot_yrs[i]))
+  
+  ggsave(paste0("allplot",plot_yrs[i],".jpg"), plot = mp, width=25, height=25, units="cm", dpi = 200)
 
-  p <- levelplot(rl[[i]],
-  col.regions=pal, 
-  contour=F, 
-  margin=F,
-  main = (rl_names[i]))
-
-  pl[[i+1]] <- p
 }
-
-mp <- marrangeGrob(pl, nrow = 3, ncol = 2, top = "2005")
-
-
-ggsave("plot.jpg", plot = mp, width=25, height=25, units="cm", dpi = 200)
-
 
 
 
