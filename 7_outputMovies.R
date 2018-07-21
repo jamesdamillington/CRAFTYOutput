@@ -23,7 +23,7 @@ library(tidyverse)
 library(rasterVis)
 library(gridExtra)
 library(RColorBrewer)
-
+library(animation)
 
 outputRaster <- function(data, variable){
   
@@ -39,6 +39,9 @@ outputRaster <- function(data, variable){
 
 plot_yrs <- seq(2000, 2002, 1)
 scenario <- "Testing-0-0"
+
+mps <- list()
+lus <- list()
 
 for(i in seq_along(plot_yrs)){
   
@@ -93,8 +96,8 @@ for(i in seq_along(plot_yrs)){
 
   #create the LU plot and add to the list
   pl[[1]] <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = "Land Use")  
-  ggsave(paste0("LUplot",plot_yrs[i],".jpg"), plot = arrangeGrob(pl[[1]]), width=15, height=15, units="cm", dpi = 300)
 
+  
   #now create Capital maps (all with same palette)
   pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
   
@@ -114,12 +117,23 @@ for(i in seq_along(plot_yrs)){
     pl[[j+1]] <- p    #+1 because LU is in furst slot
   }
   
-  mp <- marrangeGrob(pl, nrow = 3, ncol = 2, top = paste0(plot_yrs[i]))
+  mps[[i]] <- marrangeGrob(pl, nrow = 3, ncol = 2, top = paste0(plot_yrs[i]))
+  lus[[i]] <- pl[[1]]
   
-  ggsave(paste0("allplot",plot_yrs[i],".jpg"), plot = mp, width=25, height=25, units="cm", dpi = 200)
+  ggsave(paste0("allplot",plot_yrs[i],".jpg"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
 
+  ggsave(paste0("LUplot",plot_yrs[i],".jpg"), plot = arrangeGrob(pl[[1]]), width=15, height=15, units="cm", dpi = 300)
+
+    
 }
 
+
+saveVideo(
+  for(i in seq_along(lus)){
+    lus[[i]]
+  },
+  video.name = "test_png.mp4")
+  
 
 
 
