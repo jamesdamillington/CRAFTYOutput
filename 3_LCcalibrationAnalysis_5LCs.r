@@ -56,12 +56,18 @@ if(pdfprint) {
 }
 
 
+#confusionMatrix needs factors
+cDat <- cDat %>%
+  mutate(ModMode = factor(ModMode, c(1,2,3,4,5))) %>%
+  mutate(ObsMode = factor(ObsMode, c(1,2,3,4,5)))
+
+
 #could create a table subset here of munis that do not match?
 
 summary(cDat)
 LCnames <- c("Nat", "OtherAgri", "Agri", "Other", "Pasture")  #used to label error matrix in loop below
 
-yr <- 2005
+#yr <- 2005
 #loop through years, priting error matrices
 for(yr in calib_yrs){
 
@@ -131,7 +137,7 @@ mods <- mods %>%
   mutate(b = -99) %>%
   mutate(r2 = -99)
 
-#JM! update this for new LC
+
 #loop through years, fit models for each LC and populate mods table
 for(yr in calib_yrs){
 
