@@ -15,14 +15,16 @@ library(tidyverse)
 library(sf)
 library(RColorBrewer)  #for plotting
 
+#this directory should exist and contain the CRAFTYmunisServCap.csv
+run_name <- "test"
 
 #input/putput variables
-output_name <- "PDF/LCcomparisonMaps.pdf"
+output_name <- paste0("Data/",run_name,"/LCcomparisonMaps.pdf")
 
-cDat <- readr::read_csv("Data/CRAFTYmunisLC.csv")
+cDat <- readr::read_csv(paste0("Data/",run_name,"/CRAFTYmunisLC.csv"))
 
 #note following shp was created using simplyfying_shapefiles.r
-BRmunis <- st_read(paste(input_path, "/Data/Vector/BRmunis_sim10_simple2.shp", sep = ""))
+BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
 
 
 if(pdfplot) {
