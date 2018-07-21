@@ -3,6 +3,9 @@
 #timeseries of land cover and captitals 
 rm(list=ls())
 
+#this directory should exist and contain the CRAFTYmunisServCap.csv
+run_name <- "test"
+
 target_muni <- 1702406
 
 #output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
@@ -12,15 +15,15 @@ library(tidyverse)
 library(ggrepel)
 
 #oputput variables
-output_name <- paste0("PDF/Muni",target_muni,"_calibrationPlots.pdf")
+output_name <- paste0("Data/",run_name,"/muni",target_muni,"_calibrationPlots.pdf")
+
 
 if(pdfprint) {
   pdf(file = output_name)
 }
 
-
-lcDat <- readr::read_csv("Data/CRAFTYmunisLC.csv")
-scDat <- readr::read_csv("Data/CRAFTYmunisServCap.csv")
+lcDat <- readr::read_csv(paste0("Data/",run_name,"/CRAFTYmunisLC.csv"))
+scDat <- readr::read_csv(paste0("Data/",run_name,"/CRAFTYmunisServCap.csv"))
 
 df_all <- left_join(lcDat, scDat, by = c("muniID", "Year"))
 
