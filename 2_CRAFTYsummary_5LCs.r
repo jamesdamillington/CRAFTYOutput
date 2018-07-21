@@ -57,20 +57,24 @@ getCapitals <- function(data)
       sumDevC = sum(Capital.Development),
       sumInfraC = sum(Capital.Infrastructure),
       sumEconC = sum(Capital.Economic),
+      sumAcessC = sum(Capital.Acessibility),
       sumGSeasonC = sum(Capital.Growing.Season),
       sumOtherAgriC = sum(Capital.Other.Agriculture),
       sumOtherC = sum(Capital.Other),
       sumLandProteC = sum(Capital.Land.Protection),
+      sumLandPriceC = sum(Capital.Land.Price),
       meanAgriC = round(mean(Capital.Agriculture),3),
       meanNatureC = round(mean(Capital.Nature),3),
       meanHumanC = round(mean(Capital.Human),3),
       meanDevC = round(mean(Capital.Development),3),
       meanInfraC = round(mean(Capital.Infrastructure),3),
       meanEconC = round(mean(Capital.Economic),3),
+      meanAcessC = round(mean(Capital.Acessibility),3),
       meanGSeasonC = round(mean(Capital.Growing.Season),3),
       meanOtherAgriC = round(mean(Capital.Other.Agriculture),3),
       meanOtherC = round(mean(Capital.Other),3),
-      meanLandProteC = round(mean(Capital.Land.Protection),3)
+      meanLandProteC = round(mean(Capital.Land.Protection),3),
+      meanLandPriceC = round(mean(Capital.Land.Price),3)
     ) -> services
   
   return(services)
