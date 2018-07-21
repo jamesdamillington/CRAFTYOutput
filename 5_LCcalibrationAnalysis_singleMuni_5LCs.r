@@ -32,10 +32,10 @@ df_all <- left_join(lcDat, scDat, by = c("muniID", "Year"))
 muniCaps <- df_all %>% 
   filter(., muniID == target_muni) %>%
   dplyr::select(Year, meanNatureC:meanLandProteC) %>% 
-  gather(meanCapital, Capital, meanNatureC:meanLandProteC) 
+  gather(Capital, meanCapital, meanNatureC:meanLandProteC) 
 
 #rename to look better in plot
-muniCaps$meanCapital <- recode(muniCaps$meanCapital, 
+muniCaps$Capital <- recode(muniCaps$Capital, 
   meanNatureC = "Nature",
   meanHumanC = "Human",
   meanDevC = "Development",
@@ -49,13 +49,14 @@ muniCaps$meanCapital <- recode(muniCaps$meanCapital,
   
 
 p.cap <- muniCaps %>% 
-  mutate(label = if_else(Year == max(Year), as.character(meanCapital), NA_character_)) %>%
-  ggplot(aes(x = as.factor(Year), y = Capital, group = meanCapital, colour=meanCapital)) +
+  mutate(label = if_else(Year == max(Year), as.character(Capital), NA_character_)) %>%
+  ggplot(aes(x = as.factor(Year), y = meanCapital, group = Capital, colour=Capital)) +
   geom_line() +
   scale_color_brewer(palette="Paired") + 
   geom_label_repel(aes(label = label), na.rm = TRUE) +
   theme(legend.position="none") + 
-  xlab("Year")
+  xlab("Year") +
+  ggtitle(paste0("Muni ",target_muni))
 print(p.cap)
 
 
@@ -83,7 +84,8 @@ p.lc <- muniLCs %>%
   scale_color_brewer(palette = "Dark2", guide = FALSE) + 
   geom_label_repel(aes(label = label, fill = Data), na.rm = TRUE) +
   scale_fill_brewer(palette = "Greys") + 
-  xlab("Year")
+  xlab("Year") +
+  ggtitle(paste0("Muni ",target_muni))
 print(p.lc)
 
 
