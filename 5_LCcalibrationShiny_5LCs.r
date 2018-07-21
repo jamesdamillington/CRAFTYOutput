@@ -81,7 +81,9 @@ ui<-fluidPage(
 
 server<- function(input, output){
   
-  
+ #approach below using plotPolys resets the map perspective when a new later is selected (ALL polys are redrawn) 
+ #in future, to maintain perspective when changing layers, consider leafletProxy() https://stackoverflow.com/q/44309409 
+ #https://www.rdocumentation.org/packages/leaflet/versions/2.0.1/topics/leafletProxy
   
   output$plot<-renderLeaflet({
 
