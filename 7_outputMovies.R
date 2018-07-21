@@ -15,8 +15,7 @@
 
 rm(list=ls())
 
-#this directory should exist and contain the output files and region file from the run being examined
-run_name <- "test"
+
 
 library(raster)
 library(tidyverse)
@@ -36,8 +35,9 @@ outputRaster <- function(data, variable){
   
 }
 
-
-plot_yrs <- seq(2000, 2002, 1)
+#this directory should exist and contain the output files and region file from the run being examined
+run_name <- "test"
+plot_yrs <- seq(2000, 2005, 1)
 scenario <- "Testing-0-0"
 
 mps <- list()
@@ -96,7 +96,7 @@ for(i in seq_along(plot_yrs)){
 
   #create the LU plot and add to the list
   pl[[1]] <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = "Land Use")  
-
+  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Land Use ",plot_yrs[i]))  
   
   #now create Capital maps (all with same palette)
   pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
@@ -118,7 +118,7 @@ for(i in seq_along(plot_yrs)){
   }
   
   mps[[i]] <- marrangeGrob(pl, nrow = 3, ncol = 2, top = paste0(plot_yrs[i]))
-  lus[[i]] <- pl[[1]]
+  lus[[i]] <- LUmap
   
   ggsave(paste0("allplot",plot_yrs[i],".jpg"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
 
@@ -130,10 +130,14 @@ for(i in seq_along(plot_yrs)){
 
 saveVideo(
   for(i in seq_along(lus)){
-    lus[[i]]
+    print(lus[[i]])
   },
-  video.name = "test_png.mp4")
+  video.name = paste0("LandUse_",scenario,".mp4"))
   
-
+saveVideo(
+  for(i in seq_along(mps)){
+    print(mps[[i]])
+  },
+  video.name = paste0("Capitals_",scenario,".mp4"))
 
 
