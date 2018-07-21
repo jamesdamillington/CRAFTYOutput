@@ -13,12 +13,14 @@ library(RColorBrewer)  #for plotting
 library(shiny)
 library(leaflet)
 
+#this directory should exist and contain the CRAFTYmunisServCap.csv
+run_name <- "test"
 
 #input/putput variables
-cDat <- readr::read_csv("Data/CRAFTYmunisLC.csv")
+cDat <- readr::read_csv(paste0("Data/",run_name,"/CRAFTYmunisLC.csv"))
 
 #note following shp was created using simplyfying_shapefiles.r
-BRmunis <- st_read(paste(input_path, "Data/Vector/BRmunis_sim10_simple2.shp", sep = ""))
+BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
 
 cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
 cDat_map <- cDat_map %>% mutate(muniID = CD_GEOCMUn)
