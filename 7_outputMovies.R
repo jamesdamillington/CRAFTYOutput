@@ -24,7 +24,9 @@ library(gridExtra)
 library(RColorBrewer)
 library(animation)
 library(sf)
-library(ggpubr)
+
+library(viridisLite)
+
 
 outputRaster <- function(data, variable){
   
@@ -106,7 +108,8 @@ for(i in seq_along(plot_yrs)){
   LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Land Use ",plot_yrs[i]))  
   
   #now create Capital maps (all with same palette)
-  pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
+  #ras_pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
+  ras_pal <- viridis(100)
   
   rl <- list(Agri, Nat, Infra, OAg, Aces)
   rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C") 
@@ -115,7 +118,7 @@ for(i in seq_along(plot_yrs)){
     
     #create the plot
     p <- levelplot(rl[[j]],
-    col.regions=pal, 
+    col.regions=ras_pal, 
     contour=F, 
     margin=F,
     main = (rl_names[j]))
@@ -152,45 +155,91 @@ saveVideo(
 #Next, vector maps
 
 cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/CRAFTYmunisLC.csv"))
+scDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/CRAFTYmunisServCap.csv"))
 
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
 
-yr <- 2001
+yr <- 2005
 
 for(yr in plot_yrs){
 
   cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
-  outline <- st_union(st_buffer(cDat_map, 0))
-  
-  #create land cover palette
-  map_pal <- c("darkgreen", "darkcyan", "green", "grey", "khaki")
 
-  #plot observed vs modelled modal muni land cover
-  plot(cDat_map["ObsMode"], pal = map_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Observed Mode LC"), key.pos = NULL)
-  plot(outline, fill = NULL, add = T)
-  legend("bottomright", cex = 1.3, c("Nature", "Other Agri", "Agriculture", "Other", "Pasture"), fill = map_pal)
+  #create land cover palette
+  lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
+  lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
+
+  png(paste0("MuniLC_",yr,".png"))
+  plot(cDat_map %>% select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
+  legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal)
+  dev.off()
   
-  plot(cDat_map["ModMode"], pal = map_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LC"), key.pos = NULL)
-  plot(outline, fill = NULL, add = T)
-  legend("bottomright", cex = 1.3, c("Nature", "Other Agri", "Agriculture", "Other", "Pasture"), fill = map_pal)
+  #create capital maps 
+  scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+
+  cap_pal <- viridis(100)
+  brks <- seq(from=0,to=1,by=0.01)  #101 values
+  
+  png(paste0("MuniCapitals_",yr,".png"))
+  plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
+  legend("right", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
+  dev.off()
 }
 
-map_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
-
-map_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
-
-om <- ggplot(cDat_map) +
-  geom_sf(aes(fill=as.factor(ObsMode)), color = NA) +
-  scale_fill_manual(values=map_pal, labels=map_labs, name="Land Cover") +
-  theme(legend.position = c(0.825, 0.2)) + 
-  ggtitle(paste0(yr," Observed Mode LC"))
-  
-mm <- ggplot(cDat_map) +
-  geom_sf(aes(fill=as.factor(ModMode)), color = NA) +
-  scale_fill_manual(values=map_pal, labels=map_labs, name="Land Cover") +
-  theme(legend.position = c(0.825, 0.2)) + 
-  ggtitle(paste0(yr," Modelled Mode LC"))  
 
 
-ggarrange(om, mm, nrow = 1, ncol = 2, common.legend=T, legend="bottom")
+
+#following is how we would do it with ggplot but rendering is tool slow (keep for publications plotting later)
+#
+# library(ggpubr)
+# 
+# #lc maps
+# om <- ggplot(cDat_map) +
+#   geom_sf(aes(fill=as.factor(ObsMode)), color = NA) +
+#   scale_fill_manual(values=lc_pal, labels=lc_labs, name="Land Cover") +
+#   theme(legend.position = c(0.825, 0.2)) + 
+#   ggtitle(paste0(yr," Observed Mode LC"))
+#   
+# mm <- ggplot(cDat_map) +
+#   geom_sf(aes(fill=as.factor(ModMode)), color = NA) +
+#   scale_fill_manual(values=lc_pal, labels=lc_labs, name="Land Cover") +
+#   theme(legend.position = c(0.825, 0.2)) + 
+#   ggtitle(paste0(yr," Modelled Mode LC"))  
+# 
+# ggarrange(om, mm, nrow = 1, ncol = 2, common.legend=T, legend="bottom")
+# 
+# ggarrange(om, mm, nrow = 1, ncol = 2, common.legend=T, legend="bottom") %>% 
+#   ggsave(filename="tesing2.png")
+# 
+# 
+# #capitals maps
+# acm <- ggplot(scDat_map) +
+#   geom_sf(aes(fill=meanAgriC), color = NA) +
+#   scale_fill_distiller(palette = "YlOrBr", direction = 1, name="Capital") +
+#   theme(legend.position = "none") + 
+#   ggtitle(paste0(yr," Agriculture C"))
+# 
+# ncm <- ggplot(scDat_map) +
+#   geom_sf(aes(fill=meanNatureC), color = NA) +
+#   scale_fill_distiller(palette = "YlOrBr", direction = 1, name="Capital") +
+#   theme(legend.position = "none") + 
+#   ggtitle(paste0(yr," Nature C"))
+# 
+# icm <- ggplot(scDat_map) +
+#   geom_sf(aes(fill=meanInfraC), color = NA) +
+#   scale_fill_distiller(palette = "YlOrBr", direction = 1, name="Capital") +
+#   theme(legend.position = "none") + 
+#   ggtitle(paste0(yr," Infrastructure C"))
+# 
+# oacm <- ggplot(scDat_map) +
+#   geom_sf(aes(fill=meanOtherAgriC), color = NA) +
+#   scale_fill_distiller(palette = "YlOrBr", direction = 1, name="Capital") +
+#   theme(legend.position = "none") + 
+#   ggtitle(paste0(yr," Other Agri C"))
+# 
+# system.time(ggarrange(acm, ncm, icm, oacm, nrow = 2, ncol = 3))
+
+
+
+
