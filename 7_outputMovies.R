@@ -21,7 +21,6 @@ library(raster)
 library(tidyverse)
 library(rasterVis)
 library(gridExtra)
-#library(RColorBrewer)
 library(animation)
 library(sf)
 
@@ -40,7 +39,7 @@ outputRaster <- function(data, variable){
 }
 
 
-plot_yrs <- seq(2000, 2005, 1)
+plot_yrs <- seq(2000, 2015, 1)
 
 
 #this directory should exist and contain the output files and region file from the run being examined
@@ -157,6 +156,7 @@ saveVideo(
 cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/CRAFTYmunisLC.csv"))
 scDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/CRAFTYmunisServCap.csv"))
 
+
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
 
@@ -173,9 +173,9 @@ for(yr in plot_yrs){
   lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
   lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
 
-  png(paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",yr,".png"))
+  png(paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",yr,".png"), width=1000, height=1000, res=100)
   plot(cDat_map %>% select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
-  legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal)
+  legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal, title=paste0(yr))
   dev.off()
   
   
@@ -185,7 +185,7 @@ for(yr in plot_yrs){
   cap_pal <- viridis(100)
   brks <- seq(from=0,to=1,by=0.01)  #101 values
   
-  png(paste0("Data/",scenario,"/",runID,"/MuniOutput_Capitals_",yr,".png"))
+  png(paste0("Data/",scenario,"/",runID,"/MuniOutput_Capitals_",yr,".png"), width=1200, height=1200, res=100)
   plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
   legend("right", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
   dev.off()
@@ -207,7 +207,7 @@ saveVideo(
   },
   video.name = paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",scenario,".mp4"))
  
-
+pr <- par()
 
 #capitals video
 saveVideo(
@@ -220,11 +220,10 @@ saveVideo(
     brks <- seq(from=0,to=1,by=0.01)  #101 values
     
     plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
-    legend("right", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
-      
+    legend("bottom", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
+
   },
   video.name = paste0("Data/",scenario,"/",runID,"/MuniOutput_Capitals_",scenario,".mp4"))
- 
 
 
 

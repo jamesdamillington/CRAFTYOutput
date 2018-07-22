@@ -106,9 +106,9 @@ getFRs <- function(data)
 
 scenario <- "Testing"
 runID <- "0-0"
-#yrs <- seq(2000, 2010, 1)
+yrs <- seq(2000, 2015, 1)
 
-yrs <- c(2005,2010,2015)
+#yrs <- c(2005,2010,2015)
 
 
 #output variables
