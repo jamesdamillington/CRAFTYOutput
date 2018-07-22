@@ -21,7 +21,7 @@ library(raster)
 library(tidyverse)
 library(rasterVis)
 library(gridExtra)
-library(RColorBrewer)
+#library(RColorBrewer)
 library(animation)
 library(sf)
 
@@ -130,9 +130,9 @@ for(i in seq_along(plot_yrs)){
   mps[[i]] <- marrangeGrob(pl, nrow = 3, ncol = 2, top = paste0(plot_yrs[i]))
   lus[[i]] <- LUmap
   
-  ggsave(paste0("allplot",plot_yrs[i],".jpg"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
+  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_AllMaps",plot_yrs[i],".jpg"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
 
-  ggsave(paste0("LUplot",plot_yrs[i],".jpg"), plot = arrangeGrob(pl[[1]]), width=15, height=15, units="cm", dpi = 300)
+  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_LUMap",plot_yrs[i],".jpg"), plot = arrangeGrob(lus[[i]]), width=15, height=15, units="cm", dpi = 300)
 
     
 }
@@ -142,13 +142,13 @@ saveVideo(
   for(i in seq_along(lus)){
     print(lus[[i]])
   },
-  video.name = paste0("LandUse_",scenario,".mp4"))
+  video.name = paste0("Data/",scenario,"/",runID,"/RasterOutput_LandUse_",scenario,".mp4"))
   
 saveVideo(
   for(i in seq_along(mps)){
     print(mps[[i]])
   },
-  video.name = paste0("Capitals_",scenario,".mp4"))
+  video.name = paste0("Data/",scenario,"/",runID,"/RasterOutput_Capitals_",scenario,".mp4"))
 
 
 
@@ -162,6 +162,9 @@ BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
 
 yr <- 2005
 
+lclist <- list()  #this will hold the plots for ths year
+caplist <- list() 
+
 for(yr in plot_yrs){
 
   cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
@@ -170,10 +173,11 @@ for(yr in plot_yrs){
   lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
   lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
 
-  png(paste0("MuniLC_",yr,".png"))
+  png(paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",yr,".png"))
   plot(cDat_map %>% select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
   legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal)
   dev.off()
+  
   
   #create capital maps 
   scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
@@ -181,12 +185,46 @@ for(yr in plot_yrs){
   cap_pal <- viridis(100)
   brks <- seq(from=0,to=1,by=0.01)  #101 values
   
-  png(paste0("MuniCapitals_",yr,".png"))
+  png(paste0("Data/",scenario,"/",runID,"/MuniOutput_Capitals_",yr,".png"))
   plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
   legend("right", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
   dev.off()
 }
 
+#LU video
+saveVideo(
+  for(yr in plot_yrs){
+ 
+    cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+
+    #create land cover palette
+    lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
+    lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
+  
+    plot(cDat_map %>% select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
+    legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal)
+    
+  },
+  video.name = paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",scenario,".mp4"))
+ 
+
+
+#capitals video
+saveVideo(
+  for(yr in plot_yrs){
+ 
+    #create capital maps 
+    scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+  
+    cap_pal <- viridis(100)
+    brks <- seq(from=0,to=1,by=0.01)  #101 values
+    
+    plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
+    legend("right", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
+      
+  },
+  video.name = paste0("Data/",scenario,"/",runID,"/MuniOutput_Capitals_",scenario,".mp4"))
+ 
 
 
 
