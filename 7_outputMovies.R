@@ -118,6 +118,7 @@ for(i in seq_along(sim_yrs)){
     #create the plot
     p <- levelplot(rl[[j]],
     col.regions=ras_pal, 
+    at=seq(from=0,to=1,by=0.01), 
     contour=F, 
     margin=F,
     main = (rl_names[j]))
@@ -163,6 +164,14 @@ BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
 
 #yr <- 2005   #for testing
 
+#create land cover palette
+lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
+lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
+
+#create capitals palette
+cap_pal <- viridis(100)
+brks <- seq(from=0,to=1,by=0.01)  #101 values
+
 #create figures
 for(yr in sim_yrs){
 
@@ -172,10 +181,6 @@ for(yr in sim_yrs){
     #land cover map first
     cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
   
-    #create land cover palette
-    lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
-    lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
-  
     png(paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",yr,".png"), width=1000, height=1000, res=100)
     plot(cDat_map %>% select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
     legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal, title=paste0(yr))
@@ -183,10 +188,7 @@ for(yr in sim_yrs){
     
     #now create capital maps 
     scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
-  
-    cap_pal <- viridis(100)
-    brks <- seq(from=0,to=1,by=0.01)  #101 values
-    
+
     png(paste0("Data/",scenario,"/",runID,"/MuniOutput_Capitals_",yr,".png"), width=1200, height=1200, res=100)
     plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
     legend("right", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
@@ -200,10 +202,6 @@ saveVideo(
  
     cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
 
-    #create land cover palette
-    lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
-    lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
-  
     plot(cDat_map %>% select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
     legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal)
     
@@ -218,10 +216,7 @@ saveVideo(
  
     #create capital maps 
     scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
-  
-    cap_pal <- viridis(100)
-    brks <- seq(from=0,to=1,by=0.01)  #101 values
-    
+
     plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
     legend("bottom", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
 
