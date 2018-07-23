@@ -26,7 +26,7 @@ library(sf)
 
 library(viridisLite)
 
-
+#converts data in CRAFTY output file for a single variable and creates a raster
 outputRaster <- function(data, variable){
   
   out <- data %>%
@@ -103,8 +103,8 @@ for(i in seq_along(sim_yrs)){
   levels(LU) <- rat 
 
   #create the LU plot and add to the list
-  pl[[1]] <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = "Land Use")  
-  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Land Use ",sim_yrs[i]))  
+  pl[[1]] <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = "Modelled Land Use")  
+  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Modelled Land Use ",sim_yrs[i]))  
   
   #now create Capital maps (all with same palette)
   #ras_pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
@@ -132,9 +132,9 @@ for(i in seq_along(sim_yrs)){
   
   #if we want this year saved as an image 
   if(sim_yrs[i] %in% fig_yrs) {
-  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_AllMaps",sim_yrs[i],".jpg"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
+  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
 
-  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_LUMap",sim_yrs[i],".jpg"), plot = arrangeGrob(lus[[i]]), width=15, height=15, units="cm", dpi = 300)
+  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_LUMap",sim_yrs[i],".png"), plot = arrangeGrob(lus[[i]]), width=15, height=15, units="cm", dpi = 300)
   }
     
 }
