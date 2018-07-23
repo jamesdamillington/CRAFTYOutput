@@ -39,10 +39,10 @@ outputRaster <- function(data, variable){
 }
 
 
-plot_yrs <- seq(2000, 2015, 1)
+sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years
+fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years 
 
-
-#this directory should exist and contain the output files and region file from the run being examined
+#set for the run in CRAFTY (althrough runID difficult to control)
 scenario <- "Testing"
 runID <- "0-0"
 
@@ -51,10 +51,10 @@ runID <- "0-0"
 mps <- list()
 lus <- list()
 
-for(i in seq_along(plot_yrs)){
+for(i in seq_along(sim_yrs)){
   
   #Load model output data
-  output <- read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"-",runID,"-Cell-",plot_yrs[i],".csv"))
+  output <- read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"-",runID,"-Cell-",sim_yrs[i],".csv"))
   
   LU <- outputRaster(output, "LandUseIndex")
   Agri <- outputRaster(output, "Capital:Agriculture")
@@ -104,7 +104,7 @@ for(i in seq_along(plot_yrs)){
 
   #create the LU plot and add to the list
   pl[[1]] <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = "Land Use")  
-  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Land Use ",plot_yrs[i]))  
+  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Land Use ",sim_yrs[i]))  
   
   #now create Capital maps (all with same palette)
   #ras_pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
@@ -126,17 +126,19 @@ for(i in seq_along(plot_yrs)){
     pl[[j+1]] <- p    #+1 because LU is in furst slot
   }
   
-  mps[[i]] <- marrangeGrob(pl, nrow = 3, ncol = 2, top = paste0(plot_yrs[i]))
+  mps[[i]] <- marrangeGrob(pl, nrow = 3, ncol = 2, top = paste0(sim_yrs[i]))
   lus[[i]] <- LUmap
   
-  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_AllMaps",plot_yrs[i],".jpg"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
+  #if we want this year saved as an image 
+  if(sim_yrs[i] %in% fig_yrs) {
+  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_AllMaps",sim_yrs[i],".jpg"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
 
-  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_LUMap",plot_yrs[i],".jpg"), plot = arrangeGrob(lus[[i]]), width=15, height=15, units="cm", dpi = 300)
-
+  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_LUMap",sim_yrs[i],".jpg"), plot = arrangeGrob(lus[[i]]), width=15, height=15, units="cm", dpi = 300)
+  }
     
 }
 
-
+#make videos here by looping through list
 saveVideo(
   for(i in seq_along(lus)){
     print(lus[[i]])
@@ -152,48 +154,49 @@ saveVideo(
 
 
 #Next, vector maps
-
+#different approach - create figures first, then videos (as cannot save sf plot objects to a list)
 cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/CRAFTYmunisLC.csv"))
 scDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/CRAFTYmunisServCap.csv"))
-
 
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
 
-yr <- 2005
+#yr <- 2005   #for testing
 
-lclist <- list()  #this will hold the plots for ths year
-caplist <- list() 
+#create figures
+for(yr in sim_yrs){
 
-for(yr in plot_yrs){
-
-  cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
-
-  #create land cover palette
-  lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
-  lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
-
-  png(paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",yr,".png"), width=1000, height=1000, res=100)
-  plot(cDat_map %>% select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
-  legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal, title=paste0(yr))
-  dev.off()
+  #if we want this year saved as an image 
+  if(yr %in% fig_yrs) {
+    
+    #land cover map first
+    cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
   
+    #create land cover palette
+    lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
+    lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
   
-  #create capital maps 
-  scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
-
-  cap_pal <- viridis(100)
-  brks <- seq(from=0,to=1,by=0.01)  #101 values
+    png(paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",yr,".png"), width=1000, height=1000, res=100)
+    plot(cDat_map %>% select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
+    legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal, title=paste0(yr))
+    dev.off()
+    
+    #now create capital maps 
+    scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
   
-  png(paste0("Data/",scenario,"/",runID,"/MuniOutput_Capitals_",yr,".png"), width=1200, height=1200, res=100)
-  plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
-  legend("right", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
-  dev.off()
+    cap_pal <- viridis(100)
+    brks <- seq(from=0,to=1,by=0.01)  #101 values
+    
+    png(paste0("Data/",scenario,"/",runID,"/MuniOutput_Capitals_",yr,".png"), width=1200, height=1200, res=100)
+    plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
+    legend("right", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
+    dev.off()
+  }
 }
 
-#LU video
+#Now create LC video
 saveVideo(
-  for(yr in plot_yrs){
+  for(yr in sim_yrs){
  
     cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
 
@@ -211,7 +214,7 @@ pr <- par()
 
 #capitals video
 saveVideo(
-  for(yr in plot_yrs){
+  for(yr in sim_yrs){
  
     #create capital maps 
     scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
