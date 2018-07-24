@@ -13,9 +13,6 @@
 
 rm(list=ls())
 
-#this directory should exist and contain the output files and region file from the run being examined
-run_name <- "test"
-
 #required packages
 library(tidyverse)
 
