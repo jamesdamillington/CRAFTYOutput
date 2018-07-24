@@ -16,18 +16,15 @@
 rm(list=ls())
 
 
-
 library(raster)
 library(tidyverse)
 library(rasterVis)
 library(gridExtra)
 library(animation)
 library(sf)
-#library(png)
-#library(grid)
-
 library(viridisLite)
 
+##FUNCTIONS
 #converts data in CRAFTY output file for a single variable and creates a raster
 outputRaster <- function(data, variable){
   
@@ -39,7 +36,6 @@ outputRaster <- function(data, variable){
   return(ras)
   
 }
-
 
 #LU is a raster object
 makeModLUmap <- function(LU, year) {
@@ -126,11 +122,11 @@ makeObsLUmap <- function(LU, year) {
 
   return(p)
 }
+##END FUNCTIONS
 
 
-
-sim_yrs <- seq(2000, 2005, 1)   #movie made for all these years
-fig_yrs <- c(2000, 2001, 2010, 2015) #figures output for only these years 
+sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years
+fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years 
 
 #set for the run in CRAFTY (althrough runID difficult to control)
 scenario <- "Testing"
