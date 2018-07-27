@@ -3,8 +3,9 @@
 
 rm(list=ls())
 
-#this directory should exist and contain the CRAFTYmunisServCap.csv
-run_name <- "test"
+#set for the run in CRAFTY (althrough runID difficult to control)
+scenario <- "Testing"
+runID <- "0-0"
 
 #script assumes there are three calibration years (2005, 2010, 2015); edit next line if that is not correct
 calib_yrs <- c(2005, 2010, 2015)
@@ -19,7 +20,7 @@ library(gridExtra)  #for printing tables to pdf
 library(grid)
 
 #output variables)
-output_name <- paste0("Data/",run_name,"/LCcomparisonAnalysis.pdf")
+output_name <- paste0("Data/",scenario,"/",runID,"/LCcomparisonAnalysis.pdf")
 
 
 if(pdfprint) {
@@ -27,7 +28,7 @@ if(pdfprint) {
 }
 
 
-cDat <- readr::read_csv(paste0("Data/",run_name,"/CRAFTYmunisLC.csv"))
+cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/CRAFTYmunisLC.csv"))
 
 
 ## Mode analysis
