@@ -177,7 +177,7 @@ makeModLUmap <- function(LU, year) {
   rat$LandUse <- labs  
   levels(LU) <- rat 
 
-  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Modelled Land Use ",year))  
+  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, colorkey = F, main = paste0("Mod LU ",year))  
 
   return(LUmap)
   
@@ -218,7 +218,7 @@ makeObsLUmap <- function(LU, year) {
   rat$LandUse <- LUlabs  
   levels(LU) <- rat 
   
-  p <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Observed Land Use ",year))  
+  p <- levelplot(LU, att = "LandUse", col.regions=LUcols, colorkey = F, main = paste0("Obs LU ",year))  
 
   return(p)
 }
@@ -658,6 +658,8 @@ lus <- list()
 
 for(i in seq_along(sim_yrs)){
   
+  print(paste0("raster maps: ", sim_yrs[i]))
+
   #Load model output data
   output <- read_csv(paste0(data_dir,scenario,"-",runID,"-Cell-",sim_yrs[i],".csv"))
   
@@ -667,6 +669,9 @@ for(i in seq_along(sim_yrs)){
   Infra <- outputRaster(output, "Capital:Infrastructure")
   OAg <- outputRaster(output, "Capital:Other Agriculture")
   Aces <- outputRaster(output, "Capital:Acessibility")
+  Lprice <- outputRaster(output, "Capital:Land Price")
+  Lpro <- outputRaster(output, "Capital:Land Protection")
+  GrowS <- outputRaster(output, "Capital:Growing Season")
   
   pl <- list()  #this will hold the plots for the all map for this year
   lul <- list()  #this will hold the plots for the LU map for this year
@@ -686,8 +691,8 @@ for(i in seq_along(sim_yrs)){
   #ras_pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
   ras_pal <- viridis(100)
   
-  rl <- list(Agri, Nat, Infra, OAg, Aces)
-  rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C") 
+  rl <- list(Agri, Nat, Infra, OAg, Aces, Lprice, Lpro, GrowS)
+  rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C", "Land Price", "Land Protection", "Growing Season") 
   
   for(j in seq_along(rl)){
     
@@ -753,6 +758,8 @@ brks <- seq(from=0,to=1,by=0.01)  #101 values
 #create figures
 for(yr in sim_yrs){
 
+  print(paste0("vector maps: ", yr))
+  
   #if we want this year saved as an image 
   if(yr %in% fig_yrs) {
     
@@ -760,16 +767,40 @@ for(yr in sim_yrs){
     cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
   
     png(paste0(data_dir,"MuniOutput_LandUse_",yr,".png"), width=1000, height=1000, res=100)
-    plot(cDat_map %>% dplyr::select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
-    legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal, title=paste0(yr))
+   
+    m <- matrix(c(1,2,3,3),nrow = 2,ncol = 2,byrow = TRUE)
+    layout(mat = m,heights = c(0.8,0.2))
+
+    plot(cDat_map["ObsMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
+    plot(cDat_map["ModMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
+    
+    par(mar=c(0,0,0,0))
+    plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+    legend(x = "center",inset = 0, lc_labs, fill = lc_pal, title=paste0(yr), horiz = TRUE)
+    
     dev.off()
     
     #now create capital maps 
     scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+    ps <- scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanLandPriceC,meanLandProteC,meanGSeasonC)
 
     png(paste0(data_dir,"MuniOutput_Capitals_",yr,".png"), width=1200, height=1200, res=100)
-    plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
-    legend("right", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
+    
+    m <- matrix(c(1,2,3,4,5,6,7,7,7),nrow = 3,ncol = 3,byrow = TRUE)
+    layout(mat = m,heights = c(0.45,0.45,0.1))
+
+    for(psi in 1:6)
+    {
+      par(mar = c(2,2,1,1))
+      plot(ps[psi], pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = T, lty = 0, key.pos=NULL, reset=F)
+    }
+
+    #the legend is its own plot https://stackoverflow.com/a/10391001
+    par(mar=c(0,0,0,0))
+    plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+    legend(x = "center",inset = 0,
+      legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
+
     dev.off()
   }
 }
@@ -780,8 +811,15 @@ saveVideo(
  
     cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
 
-    plot(cDat_map %>% dplyr::select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
-    legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal)
+    m <- matrix(c(1,2,3,3),nrow = 2,ncol = 2,byrow = TRUE)
+    layout(mat = m,heights = c(0.8,0.2))
+
+    plot(cDat_map["ObsMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
+    plot(cDat_map["ModMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
+    
+    par(mar=c(0,0,0,0))
+    plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+    legend(x = "center",inset = 0, lc_labs, fill = lc_pal, title=paste0(yr), horiz = TRUE)
     
   },
   video.name = paste0(data_dir,"MuniOutput_LandUse_",scenario,".mp4"))
@@ -794,9 +832,22 @@ saveVideo(
  
     #create capital maps 
     scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+    ps <- scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanLandPriceC,meanLandProteC,meanGSeasonC)
+ 
+    m <- matrix(c(1,2,3,4,5,6,7,7,7),nrow = 3,ncol = 3,byrow = TRUE)
+    layout(mat = m,heights = c(0.45,0.45,0.1))
 
-    plot(scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanOtherAgriC), pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset = T)
-    legend("bottom", legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr))
+    for(psi in 1:6)
+    {
+      par(mar = c(2,2,1,1))
+      plot(ps[psi], pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = T, lty = 0, key.pos=NULL, reset=F)
+    }
+
+    #the legend is its own plot
+    par(mar=c(0,0,0,0))
+    plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+    legend(x = "center",inset = 0,
+      legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
 
   },
   video.name = paste0(data_dir,"MuniOutput_Capitals_",scenario,".mp4"))

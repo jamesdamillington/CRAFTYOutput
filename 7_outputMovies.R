@@ -277,9 +277,7 @@ for(yr in sim_yrs){
     legend(x = "center",inset = 0, lc_labs, fill = lc_pal, title=paste0(yr), horiz = TRUE)
     
     dev.off()
-    
-    cDat_map["ObsMode"]
-    
+
     #now create capital maps 
     scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
     ps <- scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanLandPriceC,meanLandProteC,meanGSeasonC)
@@ -317,13 +315,10 @@ saveVideo(
     plot(cDat_map["ObsMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
     plot(cDat_map["ModMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
     
-    #plot(cDat_map %>% select(ObsMode, ModMode), pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, reset=F)
-    #legend("bottomright", cex = 1.3, lc_labs, fill = lc_pal, title=paste0(yr))
     par(mar=c(0,0,0,0))
     plot(1, type = "n", axes=FALSE, xlab="", ylab="")
     legend(x = "center",inset = 0, lc_labs, fill = lc_pal, title=paste0(yr), horiz = TRUE)
 
-    
   },
   video.name = paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",scenario,".mp4"))
  
