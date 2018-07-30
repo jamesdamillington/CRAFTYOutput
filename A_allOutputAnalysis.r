@@ -858,6 +858,25 @@ saveVideo(
 #####
 output_name <- paste0("Data/",scenario,"/",runID,"/ProductionAnalysis.pdf")
 
+#for reading InternalDemand, from https://stackoverflow.com/a/17289991
+read.tcsv = function(file, header=TRUE, sep=",", ...) {
+
+  n = max(count.fields(file, sep=sep), na.rm=TRUE)
+  x = readLines(file)
+
+  .splitvar = function(x, sep, n) {
+    var = unlist(strsplit(x, split=sep))
+    length(var) = n
+    return(var)
+  }
+
+  x = do.call(cbind, lapply(x, .splitvar, sep=sep, n=n))
+  x = apply(x, 1, paste, collapse=sep) 
+  out = read.csv(text=x, sep=sep, header=header, ...)
+  return(out)
+
+}
+
 
 #empty table to populate from files below
 all_dat <- data.frame(
@@ -889,6 +908,24 @@ for(i in seq_along(sim_yrs)){
     add_row(commodity = "Dairy", measure = "Export", year = sim_yrs[i], value_gg = as.numeric(dat[34,2]))
 
 }
+
+
+#get internal demand data
+internal <- read.tcsv(paste0("Data/",scenario,"/StellaData/InternalCRAFTY.csv"))
+internal <- internal %>%
+  rename(year = 1, Soy = 2, Maize = 3, Meat = 4, Dairy = 5)
+
+internal <- internal %>%
+  gather(key = commodity, value = value_gg, -year) %>%
+  mutate(commodity = factor(commodity)) %>%
+  mutate(measure = factor("Internal")) %>%
+  dplyr::select(commodity, measure, year, value_gg)
+
+all_dat <- bind_rows(all_dat, internal) 
+
+all_dat <- all_dat %>%
+  mutate(measure = factor(measure))
+
 
 if(pdfprint) {
   pdf(file = output_name)

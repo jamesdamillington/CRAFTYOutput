@@ -7,7 +7,7 @@ library(tidyverse)
 library(ggplot2)
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-07-24b"
+scenario <- "Testing_2018-07-30"
 runID <- "0-0"
 sim_yrs <- seq(2000, 2015, 1)   #consolidate these years
 
@@ -35,6 +35,7 @@ read.tcsv = function(file, header=TRUE, sep=",", ...) {
 
 }
 
+rm(all_dat)
 
 #empty table to populate from files below
 all_dat <- data.frame(
@@ -78,7 +79,7 @@ internal <- internal %>%
   gather(key = commodity, value = value_gg, -year) %>%
   mutate(commodity = factor(commodity)) %>%
   mutate(measure = factor("Internal")) %>%
-  select(commodity, measure, year, value_gg)
+  dplyr::select(commodity, measure, year, value_gg)
 
 all_dat <- bind_rows(all_dat, internal) 
 
