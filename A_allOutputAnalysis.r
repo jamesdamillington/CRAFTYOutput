@@ -153,31 +153,31 @@ makeModLUmap <- function(LU, year) {
     labs <- c(labs, "Soy") 
     LUcols <- c(LUcols, 'wheat1')}
   if(1 %in% uLU) { 
-    labs <- c(labs, "Maize") 
+    labs <- c(labs, "Mze") 
     LUcols <- c(LUcols, 'wheat2')}
   if(2 %in% uLU) { 
-    labs <- c(labs, "Dbl Crp") 
+    labs <- c(labs, "DblC") 
     LUcols <- c(LUcols, 'wheat3')}
   if(3 %in% uLU) { 
-    labs <- c(labs, "Second N") 
+    labs <- c(labs, "SNat") 
     LUcols <- c(LUcols, 'darkgreen')}
   if(4 %in% uLU) { 
-    labs <- c(labs, "Pristine N") 
+    labs <- c(labs, "PNat") 
     LUcols <- c(LUcols, 'forestgreen')}
   if(5 %in% uLU) { 
-    labs <- c(labs, "OAgri") 
+    labs <- c(labs, "OAg") 
     LUcols <- c(LUcols, 'darkcyan')}
   if(6 %in% uLU) { 
-    labs <- c(labs, "Other") 
+    labs <- c(labs, "O") 
     LUcols <- c(LUcols, 'black')}
   if(7 %in% uLU) { 
-    labs <- c(labs, "Pasture") 
+    labs <- c(labs, "Pas") 
     LUcols <- c(LUcols, 'orange2')}
 
   rat$LandUse <- labs  
   levels(LU) <- rat 
 
-  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, colorkey = F, main = paste0("Mod LU ",year))  
+  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Mod LU ",year))  
 
   return(LUmap)
   
@@ -201,24 +201,24 @@ makeObsLUmap <- function(LU, year) {
   
   if(1 %in% uLU) { 
     LUcols <- c(LUcols, 'forestgreen') 
-    LUlabs <- c(LUlabs, 'Nature')  }
+    LUlabs <- c(LUlabs, 'Nat')  }
   if(2 %in% uLU) { 
     LUcols <- c(LUcols, 'darkcyan') 
-    LUlabs <- c(LUlabs, 'Other Agri') }
+    LUlabs <- c(LUlabs, 'OAg') }
   if(3 %in% uLU) { 
     LUcols <- c(LUcols, 'wheat2') 
-    LUlabs <- c(LUlabs, 'Agriculture') }
+    LUlabs <- c(LUlabs, 'Ag') }
   if(4 %in% uLU) { 
     LUcols <- c(LUcols, 'black') 
-    LUlabs <- c(LUlabs, 'Other') }
+    LUlabs <- c(LUlabs, 'Oth') }
   if(5 %in% uLU) { 
     LUcols <- c(LUcols, 'orange2') 
-    LUlabs <- c(LUlabs, 'Pasture') }
+    LUlabs <- c(LUlabs, 'Pas') }
   
   rat$LandUse <- LUlabs  
   levels(LU) <- rat 
   
-  p <- levelplot(LU, att = "LandUse", col.regions=LUcols, colorkey = F, main = paste0("Obs LU ",year))  
+  p <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Obs LU ",year))  
 
   return(p)
 }
