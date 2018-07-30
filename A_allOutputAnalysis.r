@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-07-24b"
+scenario <- "Testing_2018-07-30"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -708,7 +708,7 @@ for(i in seq_along(sim_yrs)){
     pl[[j+1]] <- p    #+1 because LU is in first slot
   }
   
-  mps[[i]] <- marrangeGrob(pl, nrow = 3, ncol = 2, top = paste0(sim_yrs[i]))
+  mps[[i]] <- marrangeGrob(pl, nrow = 3, ncol = 3, top = paste0(sim_yrs[i]))
   lus[[i]] <- marrangeGrob(lul, nrow = 1, ncol = 2, top = paste0(sim_yrs[i]))
   
   #lus[[i]] <- LUmap
