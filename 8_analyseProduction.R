@@ -78,10 +78,27 @@ internal <- internal %>%
 internal <- internal %>%
   gather(key = commodity, value = value_gg, -year) %>%
   mutate(commodity = factor(commodity)) %>%
-  mutate(measure = factor("Internal")) %>%
+  mutate(measure = factor("IntDemand")) %>%
   dplyr::select(commodity, measure, year, value_gg)
 
-all_dat <- bind_rows(all_dat, internal) 
+
+
+
+#get external demand data
+external <- read.tcsv(paste0("Data/",scenario,"/StellaData/ToCRAFTY.csv"))
+external <- external %>%
+  rename(year = 1, Soy = 2, Maize = 3, Meat = 4, Dairy = 5)
+
+external <- external %>%
+  gather(key = commodity, value = value_gg, -year) %>%
+  mutate(commodity = factor(commodity)) %>%
+  mutate(measure = factor("ExtDemand")) %>%
+  dplyr::select(commodity, measure, year, value_gg)
+
+
+
+#combine
+all_dat <- bind_rows(all_dat, internal, external) 
 
 all_dat <- all_dat %>%
   mutate(measure = factor(measure))
