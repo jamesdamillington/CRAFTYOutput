@@ -35,7 +35,7 @@ read.tcsv = function(file, header=TRUE, sep=",", ...) {
 
 }
 
-rm(all_dat)
+
 
 #empty table to populate from files below
 all_dat <- data.frame(
@@ -96,6 +96,9 @@ external <- external %>%
   dplyr::select(commodity, measure, year, value_gg)
 
 
+summary(internal)
+summary(external)
+
 
 #combine
 all_dat <- bind_rows(all_dat, internal, external) 
@@ -104,6 +107,40 @@ all_dat <- all_dat %>%
   mutate(measure = factor(measure))
 
 summary(all_dat)
+
+
+
+
+
+
+#CRAFTY demand - add code here
+#empty table to populate from files below
+crafty_dat <- data.frame(
+    commodity = character(),
+    measure = character(),
+    year = integer(),
+    value_cells = numeric()
+    
+  )
+tbl_df(crafty_dat)
+
+for(i in seq_along(sim_yrs)){
+ 
+  filen <- paste0("FromMaestro",sim_yrs[i],".csv")
+  
+  dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
+
+  crafty_dat <- crafty_dat %>% 
+    add_row(commodity = "Soy", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[35,2])) %>%
+    add_row(commodity = "Maize", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[36,2])) %>%
+    add_row(commodity = "Meat", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[37,2])) %>%
+    add_row(commodity = "Dairy", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[38,2])) 
+
+}
+
+
+
+
 
 if(pdfprint) {
   pdf(file = output_name)
@@ -143,10 +180,24 @@ all_dat %>%
   xlab("Year") +
   ggtitle("Dairy")
 
+ggplot(crafty_dat, aes(x = year, y = value_cells, fill = commodity)) + 
+  geom_bar(position = "fill",stat = "identity", colour="white") +
+  scale_y_continuous(name = "Proportion of Total", labels = scales::percent_format()) +
+  ggtitle("CRAFTY Demand")
+
+ggplot(crafty_dat, aes(x = year, y = value_cells, fill = commodity)) + 
+  geom_bar(stat = "identity", colour="white") +
+  scale_y_continuous(name = "Cells", labels = scales::comma) +
+  ggtitle("CRAFTY Demand")
+
 
 if(pdfprint) {
   dev.off()
 }
 
-#how to get and plot demand from stella?
 #also need to add empirical values for comparison...
+
+
+
+
+
