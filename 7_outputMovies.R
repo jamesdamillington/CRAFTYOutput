@@ -144,7 +144,7 @@ sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years
 fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years 
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-07-24b"
+scenario <- "Testing_2018-07-31"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -155,10 +155,10 @@ lus <- list()
 for(i in seq_along(sim_yrs)){
   
   print(paste0("raster: ", sim_yrs[i]))
-  
+
   #Load model output data
   output <- read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"-",runID,"-Cell-",sim_yrs[i],".csv"))
-  
+
   LU <- outputRaster(output, "LandUseIndex")
   Agri <- outputRaster(output, "Capital:Agriculture")
   Nat <- outputRaster(output, "Capital:Nature")
@@ -212,9 +212,9 @@ for(i in seq_along(sim_yrs)){
   
   #if we want this year saved as an image 
   if(sim_yrs[i] %in% fig_yrs) {
-  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
+  ggsave(paste0("Data/",scenario,"/",runID,"/",scenario,"_RasterOutput_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
 
-  ggsave(paste0("Data/",scenario,"/",runID,"/RasterOutput_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
+  ggsave(paste0("Data/",scenario,"/",runID,"/",scenario,"_RasterOutput_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
   }
     
 }
@@ -224,20 +224,20 @@ saveVideo(
   for(i in seq_along(lus)){
     print(lus[[i]])
   },
-  video.name = paste0("Data/",scenario,"/",runID,"/RasterOutput_LandUse_",scenario,".mp4"))
+  video.name = paste0("Data/",scenario,"/",runID,"/",scenario,"_RasterOutput_LandUse_",scenario,".mp4"))
   
 saveVideo(
   for(i in seq_along(mps)){
     print(mps[[i]])
   },
-  video.name = paste0("Data/",scenario,"/",runID,"/RasterOutput_Capitals_",scenario,".mp4"))
+  video.name = paste0("Data/",scenario,"/",runID,"/",scenario,"_RasterOutput_Capitals_",scenario,".mp4"))
 
 
 
 #Next, vector maps
 #different approach - create figures first, then videos (as cannot save sf plot objects to a list)
-cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/CRAFTYmunisLC.csv"))
-scDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/CRAFTYmunisServCap.csv"))
+cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisLC.csv"))
+scDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisServCap.csv"))
 
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
@@ -264,7 +264,7 @@ for(yr in sim_yrs){
     cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
   
     
-    png(paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",yr,".png"), width=1000, height=1000, res=100)
+    png(paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_LandUse_",yr,".png"), width=1000, height=1000, res=100)
     
     m <- matrix(c(1,2,3,3),nrow = 2,ncol = 2,byrow = TRUE)
     layout(mat = m,heights = c(0.8,0.2))
@@ -282,7 +282,7 @@ for(yr in sim_yrs){
     scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
     ps <- scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanLandPriceC,meanLandProteC,meanGSeasonC)
     
-    png(paste0("Data/",scenario,"/",runID,"/MuniOutput_Capitals_",yr,".png"), width=1200, height=1200, res=100)
+    png(paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_Capitals_",yr,".png"), width=1200, height=1200, res=100)
     
     m <- matrix(c(1,2,3,4,5,6,7,7,7),nrow = 3,ncol = 3,byrow = TRUE)
     layout(mat = m,heights = c(0.45,0.45,0.1))
@@ -320,7 +320,7 @@ saveVideo(
     legend(x = "center",inset = 0, lc_labs, fill = lc_pal, title=paste0(yr), horiz = TRUE)
 
   },
-  video.name = paste0("Data/",scenario,"/",runID,"/MuniOutput_LandUse_",scenario,".mp4"))
+  video.name = paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_LandUse_",scenario,".mp4"))
  
 
 
@@ -348,7 +348,7 @@ saveVideo(
       legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
  
   },
-  video.name = paste0("Data/",scenario,"/",runID,"/MuniOutput_Capitals_",scenario,".mp4"))
+  video.name = paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_Capitals_",scenario,".mp4"))
 
 
 #following is how we would do it with ggplot but rendering is tool slow (keep for publications plotting later)
