@@ -68,7 +68,10 @@ for(i in seq_along(sim_yrs)){
 
 }
 
-summary(all_dat)
+#needed to prevent bind_rows error below
+all_dat <- all_dat %>%
+  mutate(measure = as.character(measure), commodity = as.character(commodity))
+
 
 #get internal demand data
 internal <- read.tcsv(paste0("Data/",scenario,"/StellaData/InternalCRAFTY.csv"))
@@ -77,11 +80,8 @@ internal <- internal %>%
 
 internal <- internal %>%
   gather(key = commodity, value = value_gg, -year) %>%
-  mutate(commodity = factor(commodity)) %>%
-  mutate(measure = factor("IntDemand")) %>%
+  mutate(measure = "IntDemand") %>%
   dplyr::select(commodity, measure, year, value_gg)
-
-
 
 
 #get external demand data
@@ -91,20 +91,15 @@ external <- external %>%
 
 external <- external %>%
   gather(key = commodity, value = value_gg, -year) %>%
-  mutate(commodity = factor(commodity)) %>%
-  mutate(measure = factor("ExtDemand")) %>%
+  mutate(measure = "ExtDemand") %>%
   dplyr::select(commodity, measure, year, value_gg)
-
-
-summary(internal)
-summary(external)
 
 
 #combine
 all_dat <- bind_rows(all_dat, internal, external) 
 
 all_dat <- all_dat %>%
-  mutate(measure = factor(measure))
+  mutate(commodity = factor(commodity), measure = factor(measure))
 
 summary(all_dat)
 
@@ -140,56 +135,61 @@ for(i in seq_along(sim_yrs)){
 
 
 
-
-
 if(pdfprint) {
   pdf(file = output_name)
 }
 
 #now plot
 #timelines of production, storage, export by commodity
-all_dat %>% 
+a <- all_dat %>% 
   filter(commodity == "Soy") %>%
   ggplot(aes(x=year, y=value_gg, group=measure)) +
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Soy") 
+print(a)
 
-all_dat %>% 
+a <- all_dat %>% 
   filter(commodity == "Maize") %>%
   ggplot(aes(x=year, y=value_gg, group=measure)) +
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Maize")
+print(a)
 
-all_dat %>% 
+a <- all_dat %>% 
   filter(commodity == "Meat") %>%
   ggplot(aes(x=year, y=value_gg, group=measure)) +
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Meat")
+print(a)
 
-all_dat %>% 
+a <- all_dat %>% 
   filter(commodity == "Dairy") %>%
   ggplot(aes(x=year, y=value_gg, group=measure)) +
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Dairy")
+print(a)
 
-ggplot(crafty_dat, aes(x = year, y = value_cells, fill = commodity)) + 
+c <- crafty_dat %>% 
+  ggplot(aes(x = year, y = value_cells, fill = commodity)) + 
   geom_bar(position = "fill",stat = "identity", colour="white") +
   scale_y_continuous(name = "Proportion of Total", labels = scales::percent_format()) +
   ggtitle("CRAFTY Demand")
+print(c)
 
-ggplot(crafty_dat, aes(x = year, y = value_cells, fill = commodity)) + 
+c <- crafty_dat %>% 
+  ggplot(aes(x = year, y = value_cells, fill = commodity)) + 
   geom_bar(stat = "identity", colour="white") +
   scale_y_continuous(name = "Cells", labels = scales::comma) +
   ggtitle("CRAFTY Demand")
-
+print(c)
 
 if(pdfprint) {
   dev.off()

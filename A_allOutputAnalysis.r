@@ -910,6 +910,11 @@ for(i in seq_along(sim_yrs)){
 }
 
 
+#needed to prevent bind_rows error below
+all_dat <- all_dat %>%
+  mutate(measure = as.character(measure), commodity = as.character(commodity))
+
+
 #get internal demand data
 internal <- read.tcsv(paste0("Data/",scenario,"/StellaData/InternalCRAFTY.csv"))
 internal <- internal %>%
@@ -917,11 +922,8 @@ internal <- internal %>%
 
 internal <- internal %>%
   gather(key = commodity, value = value_gg, -year) %>%
-  mutate(commodity = factor(commodity)) %>%
-  mutate(measure = factor("IntDemand")) %>%
+  mutate(measure = "IntDemand") %>%
   dplyr::select(commodity, measure, year, value_gg)
-
-
 
 
 #get external demand data
@@ -931,17 +933,41 @@ external <- external %>%
 
 external <- external %>%
   gather(key = commodity, value = value_gg, -year) %>%
-  mutate(commodity = factor(commodity)) %>%
-  mutate(measure = factor("ExtDemand")) %>%
+  mutate(measure = "ExtDemand") %>%
   dplyr::select(commodity, measure, year, value_gg)
-
 
 
 #combine
 all_dat <- bind_rows(all_dat, internal, external) 
 
 all_dat <- all_dat %>%
-  mutate(measure = factor(measure))
+  mutate(commodity = factor(commodity), measure = factor(measure))
+
+
+#CRAFTY demand - add code here
+#empty table to populate from files below
+crafty_dat <- data.frame(
+    commodity = character(),
+    measure = character(),
+    year = integer(),
+    value_cells = numeric()
+    
+  )
+tbl_df(crafty_dat)
+
+for(i in seq_along(sim_yrs)){
+ 
+  filen <- paste0("FromMaestro",sim_yrs[i],".csv")
+  
+  dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
+
+  crafty_dat <- crafty_dat %>% 
+    add_row(commodity = "Soy", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[35,2])) %>%
+    add_row(commodity = "Maize", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[36,2])) %>%
+    add_row(commodity = "Meat", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[37,2])) %>%
+    add_row(commodity = "Dairy", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[38,2])) 
+
+}
 
 
 
@@ -951,38 +977,55 @@ if(pdfprint) {
 
 #now plot
 #timelines of production, storage, export by commodity
-all_dat %>% 
+a <- all_dat %>% 
   filter(commodity == "Soy") %>%
   ggplot(aes(x=year, y=value_gg, group=measure)) +
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Soy") 
+print(a)
 
-all_dat %>% 
+a <- all_dat %>% 
   filter(commodity == "Maize") %>%
   ggplot(aes(x=year, y=value_gg, group=measure)) +
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Maize")
+print(a)
 
-all_dat %>% 
+a <- all_dat %>% 
   filter(commodity == "Meat") %>%
   ggplot(aes(x=year, y=value_gg, group=measure)) +
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Meat")
+print(a)
 
-all_dat %>% 
+a <- all_dat %>% 
   filter(commodity == "Dairy") %>%
   ggplot(aes(x=year, y=value_gg, group=measure)) +
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Dairy")
+print(a)
 
+c <- crafty_dat %>% 
+  ggplot(aes(x = year, y = value_cells, fill = commodity)) + 
+  geom_bar(position = "fill",stat = "identity", colour="white") +
+  scale_y_continuous(name = "Proportion of Total", labels = scales::percent_format()) +
+  ggtitle("CRAFTY Demand")
+print(c)
+
+c <- crafty_dat %>% 
+  ggplot(aes(x = year, y = value_cells, fill = commodity)) + 
+  geom_bar(stat = "identity", colour="white") +
+  scale_y_continuous(name = "Cells", labels = scales::comma) +
+  ggtitle("CRAFTY Demand")
+print(c)
 
 if(pdfprint) {
   dev.off()
