@@ -513,6 +513,74 @@ p <- ggplot(mods, aes(x = Year, y = r2, fill = LC)) +
   ggtitle("Model Comparison") 
 print(p)
 
+
+#add state ID
+cDat <- cDat %>%
+  mutate(state = (muniID %/% 100000)) %>%
+  mutate(state = if_else(state == 17, "TO", 
+      if_else(state == 29, "BA",
+      if_else(state == 31, "MG",
+      if_else(state == 35, "SP",
+      if_else(state == 41, "PR",
+      if_else(state == 42, "SC",
+      if_else(state == 43, "RS", 
+      if_else(state == 50, "MS",
+      if_else(state == 51, "MT",
+      if_else(state == 52, "GO", "NA"
+      ))))))))))
+    )
+
+#timeseries plots
+cDat <- cDat %>%
+      mutate(Nat.Mod = round(Mod1 * cellCount,0)) %>%
+      mutate(OAgri.Mod = round(Mod2 * cellCount,0)) %>%
+      mutate(Agri.Mod = round(Mod3 * cellCount,0)) %>%
+      mutate(Other.Mod = round(Mod4 * cellCount,0)) %>%
+      mutate(Pas.Mod = round(Mod5 * cellCount,0)) %>%
+      mutate(Nat.Obs = round(Obs1 * cellCount,0)) %>%
+      mutate(OAgri.Obs = round(Obs2 * cellCount,0)) %>%
+      mutate(Agri.Obs = round(Obs3 * cellCount,0)) %>%
+      mutate(Other.Obs = round(Obs4 * cellCount,0)) %>%
+      mutate(Pas.Obs = round(Obs5 * cellCount,0))
+
+#long version
+cDat_long_mod <- cDat %>%
+  dplyr::select(Year, state:Pas.Mod) %>%
+  gather(key = LC, value = cells, -Year, -state) %>% 
+  group_by(Year,LC) %>%
+  summarise_at(vars(matches("cells")),sum) %>%
+  mutate(source = "Mod")
+
+cDat_long_obs<- cDat %>%
+  dplyr::select(Year, state, Nat.Obs:Pas.Obs) %>%
+  gather(key = LC, value = cells, -Year, -state) %>% 
+  group_by(Year,LC) %>%
+  summarise_at(vars(matches("cells")),sum) %>%
+  mutate(source = "Obs")
+
+cDat_long <- bind_rows(cDat_long_mod, cDat_long_obs)
+
+cDat_long <- cDat_long %>%
+  mutate(LC = 
+    if_else(LC == "Nat.Mod" | LC == "Nat.Obs", "Nature",
+    if_else(LC == "OAgri.Mod" | LC == "OAgri.Obs", "OAgri",
+    if_else(LC == "Agri.Mod" | LC == "Agri.Obs", "Agri",
+    if_else(LC == "Other.Mod" | LC == "Other.Obs", "Other",
+      "Pasture")))))
+    
+    
+#mutate(LC = as.factor(LC), source = as.factor(source))
+
+c <- cDat_long %>% 
+  ggplot(aes(x = Year, y = cells,color = LC, linetype = source)) + 
+  geom_line(size = 1) +
+  scale_y_continuous(name = "Cells", labels = scales::comma) +
+  ggtitle("CRAFTY Output")
+print(c)
+
+
+
+
 #scatter plots of observed vs 'modelled' proportion of muni LC
 theme_set(theme_gray(base_size = 18))
 
@@ -708,7 +776,7 @@ for(i in seq_along(sim_yrs)){
   if(sim_yrs[i] %in% fig_yrs) {
   ggsave(paste0(data_dir,scenario,"_RasterOutput_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
 
-  ggsave(paste0(data_dir,scenario"_RasterOutput_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
+  ggsave(paste0(data_dir,scenario,"_RasterOutput_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
   }
     
 }
@@ -847,7 +915,7 @@ saveVideo(
 
 #start of 8_analyseProduction.r
 #####
-output_name <- paste0("Data/",scenario,"/",runID,"/"scenario,"_ProductionAnalysis.pdf")
+output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis.pdf")
 
 #for reading InternalDemand, from https://stackoverflow.com/a/17289991
 read.tcsv = function(file, header=TRUE, sep=",", ...) {
