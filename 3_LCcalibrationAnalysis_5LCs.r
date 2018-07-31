@@ -4,7 +4,7 @@
 rm(list=ls())
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing"
+scenario <- "Testing_2018-07-31"
 runID <- "0-0"
 
 #script assumes there are three calibration years (2005, 2010, 2015); edit next line if that is not correct
@@ -20,7 +20,7 @@ library(gridExtra)  #for printing tables to pdf
 library(grid)
 
 #output variables)
-output_name <- paste0("Data/",scenario,"/",runID,"/LCcomparisonAnalysis.pdf")
+output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_LCcomparisonAnalysis.pdf")
 
 
 if(pdfprint) {
@@ -28,7 +28,8 @@ if(pdfprint) {
 }
 
 
-cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/CRAFTYmunisLC.csv"))
+cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisLC.csv"),
+  col_types = cols(Year = col_integer(), diffcProp3 = col_double()))  #needed to ensure correct import (many zeros in diffcProp3 at top of file)
 
 
 ## Mode analysis

@@ -355,10 +355,11 @@ readr::write_csv(lcDat, path = LC_name)
 #start of 3_LCcalibrationAnalysis_5LCs.r
 #####
 if(pdfprint) {
-  pdf(file = paste0(data_dir,"LCcomparisonAnalysis.pdf"))
+  pdf(file = paste0(data_dir,scenario,"_LCcomparisonAnalysis.pdf"))
 }
 
-cDat <- readr::read_csv(LC_name)
+cDat <- readr::read_csv(LC_name,
+  col_types = cols(Year = col_integer(), diffcProp3 = col_double())) #needed to ensure correct import (many zeros in diffcProp3 at top of file)
 
 ## Mode analysis
 
