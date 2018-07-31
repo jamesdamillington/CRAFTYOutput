@@ -101,7 +101,7 @@ getFRs <- function(data)
 
 
 
-scenario <- "Testing"
+scenario <- "Testing_2018-07-31"
 runID <- "0-0"
 yrs <- seq(2000, 2015, 1)
 
@@ -218,9 +218,16 @@ for(i in seq_along(yrs)){
     mutate(diffcProp2 = round(Mod2 - Obs2, digits = 3)) %>%
     mutate(diffcProp3 = round(Mod3 - Obs3, digits = 3)) %>%
     mutate(diffcProp4 = round(Mod4 - Obs4, digits = 3)) %>%
-    mutate(diffcProp5 = round(Mod5 - Obs5, digits = 3))
+    mutate(diffcProp5 = round(Mod5 - Obs5, digits = 3)) 
 
-
+  #ensure Year is written as integer (see https://github.com/tidyverse/readr/issues/645)
+  lcDat <- lcDat %>%
+    mutate(Year = as.integer(Year))
+  
+  scDat <- scDat %>%
+    mutate(Year = as.integer(Year))
+  
+  
 #write data to file
 readr::write_csv(scDat, path = SC_name)
 readr::write_csv(lcDat, path = LC_name)

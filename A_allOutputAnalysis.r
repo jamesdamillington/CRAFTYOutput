@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-07-30"
+scenario <- "Testing_2018-07-31"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -340,6 +340,12 @@ for(i in seq_along(yrs)){
     mutate(diffcProp4 = round(Mod4 - Obs4, digits = 3)) %>%
     mutate(diffcProp5 = round(Mod5 - Obs5, digits = 3))
 
+  #ensure Year is written as integer (see https://github.com/tidyverse/readr/issues/645)
+  lcDat <- lcDat %>%
+    mutate(Year = as.integer(Year))
+  
+  scDat <- scDat %>%
+    mutate(Year = as.integer(Year))
 
 #write data to file
 readr::write_csv(scDat, path = SC_name)
