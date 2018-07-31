@@ -35,17 +35,67 @@ read.tcsv = function(file, header=TRUE, sep=",", ...) {
 
 }
 
+odata <- read_csv("Data/Production_Export_Internal.csv")
+
+obs_data <- odata %>%
+  filter(Year <= 2015) %>%
+  dplyr::select(-ends_with("export_China_gg")) %>%
+  rename(year = Year)
+
+Dairy_long <- obs_data %>%
+  dplyr::select(year, starts_with("Dairy")) %>%
+  gather(key = measure, value = value_gg, -year) %>%
+  mutate(commodity = "Dairy") %>%
+  mutate(measure = 
+      if_else(grepl("Production", measure), "Production", 
+        if_else(grepl("export", measure), "Export", "Internal")
+        ) 
+    )
+
+Maize_long <- obs_data %>%
+  dplyr::select(year, starts_with("Maize")) %>%
+  gather(key = measure, value = value_gg, -year) %>%
+  mutate(commodity = "Maize") %>%
+  mutate(measure = 
+      if_else(grepl("Production", measure), "Production", 
+        if_else(grepl("export", measure), "Export", "Internal")
+        ) 
+    )
+
+Meat_long <- obs_data %>%
+  dplyr::select(year, starts_with("Meat")) %>%
+  gather(key = measure, value = value_gg, -year) %>%
+  mutate(commodity = "Meat") %>%
+  mutate(measure = 
+      if_else(grepl("Production", measure), "Production", 
+        if_else(grepl("export", measure), "Export", "Internal")
+        ) 
+    )
+
+Soy_long <- obs_data %>%
+  dplyr::select(year, starts_with("Soy")) %>%
+  gather(key = measure, value = value_gg, -year) %>%
+  mutate(commodity = "Soy") %>%
+  mutate(measure = 
+      if_else(grepl("Production", measure), "Production", 
+        if_else(grepl("export", measure), "Export", "Internal")
+        ) 
+    )
+
+obs_long <- bind_rows(Dairy_long, Maize_long, Soy_long, Meat_long) %>%
+  mutate(source = "Obs")
+  
 
 
 #empty table to populate from files below
-all_dat <- data.frame(
+mod_dat <- data.frame(
     commodity = character(),
     measure = character(),
     year = integer(),
     value_gg = numeric()
     
   )
-tbl_df(all_dat)
+tbl_df(mod_dat)
 
 #loop through all files 
 for(i in seq_along(sim_yrs)){
@@ -54,7 +104,7 @@ for(i in seq_along(sim_yrs)){
   
   dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
 
-  all_dat <- all_dat %>% 
+  mod_dat <- mod_dat %>% 
     add_row(commodity = "Soy", measure = "Production", year = sim_yrs[i], value_gg = as.numeric(dat[1,2])) %>%
     add_row(commodity = "Soy", measure = "Storage", year = sim_yrs[i], value_gg = as.numeric(dat[4,2])) %>%
     add_row(commodity = "Soy", measure = "Export", year = sim_yrs[i], value_gg = as.numeric(dat[3,2])) %>%
@@ -69,7 +119,7 @@ for(i in seq_along(sim_yrs)){
 }
 
 #needed to prevent bind_rows error below
-all_dat <- all_dat %>%
+mod_dat <- mod_dat %>%
   mutate(measure = as.character(measure), commodity = as.character(commodity))
 
 
@@ -96,14 +146,25 @@ external <- external %>%
 
 
 #combine
-all_dat <- bind_rows(all_dat, internal, external) 
+mod_dat <- bind_rows(mod_dat, internal, external)  %>%
+  mutate(source = "Stella")
 
-all_dat <- all_dat %>%
-  mutate(commodity = factor(commodity), measure = factor(measure))
+mod_dat <- mod_dat %>%
+  dplyr::select(year, commodity, measure, source, value_gg) 
+
+obs_long <- obs_long %>%
+  dplyr::select(year, commodity, measure, source, value_gg)
+
+summary(mod_dat)
+summary(obs_long)
+
+
+all_dat <- bind_rows(mod_dat, obs_long) %>%
+  mutate(source = factor(source), measure = factor(measure), commodity = factor(commodity))
+  
+
 
 summary(all_dat)
-
-
 
 
 
@@ -143,12 +204,13 @@ if(pdfprint) {
 #timelines of production, storage, export by commodity
 a <- all_dat %>% 
   filter(commodity == "Soy") %>%
-  ggplot(aes(x=year, y=value_gg, group=measure)) +
-  geom_line(aes(color=measure)) +
+  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  geom_line() +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Soy") 
 print(a)
+
 
 a <- all_dat %>% 
   filter(commodity == "Maize") %>%
@@ -156,7 +218,7 @@ a <- all_dat %>%
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
-  ggtitle("Maize")
+  ggtitle("Modelled Maize")
 print(a)
 
 a <- all_dat %>% 
@@ -165,7 +227,7 @@ a <- all_dat %>%
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
-  ggtitle("Meat")
+  ggtitle("Modelled Meat")
 print(a)
 
 a <- all_dat %>% 
@@ -174,7 +236,7 @@ a <- all_dat %>%
   geom_line(aes(color=measure)) +
   ylab("Value (gg)") +
   xlab("Year") +
-  ggtitle("Dairy")
+  ggtitle("Modelled Dairy")
 print(a)
 
 c <- crafty_dat %>% 
