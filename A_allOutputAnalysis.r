@@ -847,7 +847,7 @@ saveVideo(
 
 #start of 8_analyseProduction.r
 #####
-output_name <- paste0("Data/",scenario,"/",runID,"/ProductionAnalysis.pdf")
+output_name <- paste0("Data/",scenario,"/",runID,"/"scenario,"_ProductionAnalysis.pdf")
 
 #for reading InternalDemand, from https://stackoverflow.com/a/17289991
 read.tcsv = function(file, header=TRUE, sep=",", ...) {

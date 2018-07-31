@@ -7,13 +7,13 @@ library(tidyverse)
 library(ggplot2)
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-07-30"
+scenario <- "Testing_2018-07-31"
 runID <- "0-0"
 sim_yrs <- seq(2000, 2015, 1)   #consolidate these years
 
 #output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
-output_name <- paste0("Data/",scenario,"/",runID,"/ProductionAnalysis.pdf")
+output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis.pdf")
 
 
 #for reading InternalDemand, from https://stackoverflow.com/a/17289991
