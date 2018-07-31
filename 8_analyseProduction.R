@@ -191,6 +191,15 @@ c <- crafty_dat %>%
   ggtitle("CRAFTY Demand")
 print(c)
 
+c <- crafty_dat %>% 
+  ggplot(aes(x = year, y = value_cells, colour = commodity)) + 
+  geom_line(size =1) +
+  scale_y_continuous(name = "Cells", labels = scales::comma) +
+  ggtitle("CRAFTY Demand")
+print(c)
+
+
+
 if(pdfprint) {
   dev.off()
 }
