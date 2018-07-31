@@ -229,8 +229,8 @@ makeObsLUmap <- function(LU, year) {
 #start of 2_CRAFTYsummary_5LCs.r
 #####
 #output variables
-SC_name <- paste0(data_dir,"CRAFTYmunisServCap.csv")  #output file name for services and capitals
-LC_name <- paste0(data_dir,"CRAFTYmunisLC.csv")  #output file name for land cover data 
+SC_name <- paste0(data_dir,scenario,"_CRAFTYmunisServCap.csv")  #output file name for services and capitals
+LC_name <- paste0(data_dir,scenario,"_CRAFTYmunisLC.csv")  #output file name for land cover data 
 
 #load the region file (used to match each cell to a municipality)
 region <- read.csv(paste0(data_dir,"region.csv"))

@@ -109,8 +109,8 @@ yrs <- seq(2000, 2015, 1)
 
 
 #output variables
-SC_name <- paste0("Data/",scenario,"/",runID,"/CRAFTYmunisServCap.csv")  #output file name for services and capitals
-LC_name <- paste0("Data/",scenario,"/",runID,"/CRAFTYmunisLC.csv")  #output file name for land cover data 
+SC_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisServCap.csv")  #output file name for services and capitals
+LC_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisLC.csv")  #output file name for land cover data 
 
 #load the region file (used to match each cell to a municipality)
 region <- read.csv(paste0("Data/",scenario,"/",runID,"/region.csv"))
