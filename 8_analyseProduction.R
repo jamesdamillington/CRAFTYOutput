@@ -147,7 +147,7 @@ external <- external %>%
 
 #combine
 mod_dat <- bind_rows(mod_dat, internal, external)  %>%
-  mutate(source = "Stella")
+  mutate(source = "Modelled")
 
 mod_dat <- mod_dat %>%
   dplyr::select(year, commodity, measure, source, value_gg) 
@@ -196,6 +196,10 @@ for(i in seq_along(sim_yrs)){
 
 
 
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442")
+
+
+
 if(pdfprint) {
   pdf(file = output_name)
 }
@@ -206,6 +210,7 @@ a <- all_dat %>%
   filter(commodity == "Soy") %>%
   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
   geom_line() +
+  scale_colour_manual(values=cbPalette) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Soy") 
@@ -214,29 +219,32 @@ print(a)
 
 a <- all_dat %>% 
   filter(commodity == "Maize") %>%
-  ggplot(aes(x=year, y=value_gg, group=measure)) +
-  geom_line(aes(color=measure)) +
+  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  geom_line() +
+  scale_colour_manual(values=cbPalette) +
   ylab("Value (gg)") +
   xlab("Year") +
-  ggtitle("Modelled Maize")
+  ggtitle("Maize") 
 print(a)
 
 a <- all_dat %>% 
   filter(commodity == "Meat") %>%
-  ggplot(aes(x=year, y=value_gg, group=measure)) +
-  geom_line(aes(color=measure)) +
+  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  geom_line() +
+  scale_colour_manual(values=cbPalette) +
   ylab("Value (gg)") +
   xlab("Year") +
-  ggtitle("Modelled Meat")
+  ggtitle("Meat") 
 print(a)
 
 a <- all_dat %>% 
   filter(commodity == "Dairy") %>%
-  ggplot(aes(x=year, y=value_gg, group=measure)) +
-  geom_line(aes(color=measure)) +
+  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  geom_line() +
+  scale_colour_manual(values=cbPalette) +
   ylab("Value (gg)") +
   xlab("Year") +
-  ggtitle("Modelled Dairy")
+  ggtitle("Dairy") 
 print(a)
 
 c <- crafty_dat %>% 
@@ -255,7 +263,7 @@ print(c)
 
 c <- crafty_dat %>% 
   ggplot(aes(x = year, y = value_cells, colour = commodity)) + 
-  geom_line(size =1) +
+  geom_line() +
   scale_y_continuous(name = "Cells", labels = scales::comma) +
   ggtitle("CRAFTY Demand")
 print(c)

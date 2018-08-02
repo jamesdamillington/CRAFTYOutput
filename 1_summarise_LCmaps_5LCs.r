@@ -8,6 +8,8 @@ library(raster)
 library(tidyverse)
 library(mapview)
 
+
+
 ######
 #FUNCTIONS
 #raster to xyz  (with help from https://stackoverflow.com/a/19847419)
