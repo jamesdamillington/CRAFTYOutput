@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-07-31"
+scenario <- "Testing_2018-08-02"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -1029,6 +1029,8 @@ for(i in seq_along(sim_yrs)){
 }
 
 
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442")
+
 
 if(pdfprint) {
   pdf(file = output_name)
@@ -1038,38 +1040,43 @@ if(pdfprint) {
 #timelines of production, storage, export by commodity
 a <- all_dat %>% 
   filter(commodity == "Soy") %>%
-  ggplot(aes(x=year, y=value_gg, group=measure)) +
-  geom_line(aes(color=measure)) +
+  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  geom_line() +
+  scale_colour_manual(values=cbPalette) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Soy") 
 print(a)
 
+
 a <- all_dat %>% 
   filter(commodity == "Maize") %>%
-  ggplot(aes(x=year, y=value_gg, group=measure)) +
-  geom_line(aes(color=measure)) +
+  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  geom_line() +
+  scale_colour_manual(values=cbPalette) +
   ylab("Value (gg)") +
   xlab("Year") +
-  ggtitle("Maize")
+  ggtitle("Maize") 
 print(a)
 
 a <- all_dat %>% 
   filter(commodity == "Meat") %>%
-  ggplot(aes(x=year, y=value_gg, group=measure)) +
-  geom_line(aes(color=measure)) +
+  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  geom_line() +
+  scale_colour_manual(values=cbPalette) +
   ylab("Value (gg)") +
   xlab("Year") +
-  ggtitle("Meat")
+  ggtitle("Meat") 
 print(a)
 
 a <- all_dat %>% 
   filter(commodity == "Dairy") %>%
-  ggplot(aes(x=year, y=value_gg, group=measure)) +
-  geom_line(aes(color=measure)) +
+  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  geom_line() +
+  scale_colour_manual(values=cbPalette) +
   ylab("Value (gg)") +
   xlab("Year") +
-  ggtitle("Dairy")
+  ggtitle("Dairy") 
 print(a)
 
 c <- crafty_dat %>% 
@@ -1085,6 +1092,14 @@ c <- crafty_dat %>%
   scale_y_continuous(name = "Cells", labels = scales::comma) +
   ggtitle("CRAFTY Demand")
 print(c)
+
+c <- crafty_dat %>% 
+  ggplot(aes(x = year, y = value_cells, colour = commodity)) + 
+  geom_line() +
+  scale_y_continuous(name = "Cells", labels = scales::comma) +
+  ggtitle("CRAFTY Demand")
+print(c)
+
 
 if(pdfprint) {
   dev.off()
