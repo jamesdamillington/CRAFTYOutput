@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-08-02"
+scenario <- "Testing_2018-08-03"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -149,6 +149,9 @@ makeModLUmap <- function(LU, year) {
   labs <- c()
   LUcols <- c()
   
+  if(-1 %in% uLU) { 
+    labs <- c(labs, "LazyFR") 
+    LUcols <- c(LUcols, 'deeppink')}
   if(0 %in% uLU) { 
     labs <- c(labs, "Soy") 
     LUcols <- c(LUcols, 'wheat1')}
@@ -799,8 +802,9 @@ saveVideo(
 
 #Next, vector maps
 #different approach - create figures first, then videos (as cannot save sf plot objects to a list)
-cDat <- readr::read_csv(paste0(data_dir,scenario,"_CRAFTYmunisLC.csv"))
-scDat <- readr::read_csv(paste0(data_dir,scenario,"_CRAFTYmunisServCap.csv"))
+cDat <- readr::read_csv(LC_name,
+  col_types = cols(Year = col_integer(), diffcProp3 = col_double()))  #needed to ensure correct import (many zeros in diffcProp3 at top of file)
+scDat <- readr::read_csv(SC_name)
 
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")

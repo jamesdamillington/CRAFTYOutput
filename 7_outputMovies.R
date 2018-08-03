@@ -64,6 +64,9 @@ makeModLUmap <- function(LU, year) {
   labs <- c()
   LUcols <- c()
   
+  if(-1 %in% uLU) { 
+    labs <- c(labs, "LazyFR") 
+    LUcols <- c(LUcols, 'deeppink')}
   if(0 %in% uLU) { 
     labs <- c(labs, "Soy") 
     LUcols <- c(LUcols, 'wheat1')}
@@ -236,7 +239,9 @@ saveVideo(
 
 #Next, vector maps
 #different approach - create figures first, then videos (as cannot save sf plot objects to a list)
-cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisLC.csv"))
+cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisLC.csv"),
+  col_types = cols(Year = col_integer(), diffcProp3 = col_double()))  #needed to ensure correct import (many zeros in diffcProp3 at top of file)
+
 scDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisServCap.csv"))
 
 #note following shp was created using simplyfying_shapefiles.r
