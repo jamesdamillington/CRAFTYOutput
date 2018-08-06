@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-08-03"
+scenario <- "Testing_2018-08-06h"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -20,12 +20,16 @@ data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been
 
 yrs <- seq(2000, 2015, 1)        #all years of analysis
 calib_yrs <- c(2005, 2010, 2015) #years for calibration analysis
+#calib_yrs <- seq(2000, 2004, 1) #years for calibration analysis
 
 sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years (will usually be identical to yrs above)
 fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years 
+#sim_yrs <- seq(2000, 2004, 1)   #movie made for all these years (will usually be identical to yrs above)
+#fig_yrs <- seq(2000, 2004, 1) #figures output for only these years 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
+video_output <- FALSE
 
 #required packages
 library(tidyverse)
@@ -785,19 +789,21 @@ for(i in seq_along(sim_yrs)){
     
 }
 
-#make videos here by looping through list
-saveVideo(
-  for(i in seq_along(lus)){
-    print(lus[[i]])
-  },
-  video.name = paste0(data_dir,scenario,"_RasterOutput_LandUse_",scenario,".mp4"))
-  
-saveVideo(
-  for(i in seq_along(mps)){
-    print(mps[[i]])
-  },
-  video.name = paste0(data_dir,scenario,"_RasterOutput_Capitals_",scenario,".mp4"))
-
+if(video_output)
+{
+  #make videos here by looping through list
+  saveVideo(
+    for(i in seq_along(lus)){
+      print(lus[[i]])
+    },
+    video.name = paste0(data_dir,scenario,"_RasterOutput_LandUse_",scenario,".mp4"))
+    
+  saveVideo(
+    for(i in seq_along(mps)){
+      print(mps[[i]])
+    },
+    video.name = paste0(data_dir,scenario,"_RasterOutput_Capitals_",scenario,".mp4"))
+}
 
 
 #Next, vector maps
@@ -869,53 +875,56 @@ for(yr in sim_yrs){
   }
 }
 
-#Now create LC video
-saveVideo(
-  for(yr in sim_yrs){
- 
-    cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+if(video_output)
+{
+  #Now create LC video
+  saveVideo(
+    for(yr in sim_yrs){
+   
+      cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+  
+      m <- matrix(c(1,2,3,3),nrow = 2,ncol = 2,byrow = TRUE)
+      layout(mat = m,heights = c(0.8,0.2))
+  
+      plot(cDat_map["ObsMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
+      plot(cDat_map["ModMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
+      
+      par(mar=c(0,0,0,0))
+      plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+      legend(x = "center",inset = 0, lc_labs, fill = lc_pal, title=paste0(yr), horiz = TRUE)
+      
+    },
+    video.name = paste0(data_dir,scenario,"_MuniOutput_LandUse_",scenario,".mp4"))
+   
+  pr <- par()
+  
+  #capitals video
+  saveVideo(
+    for(yr in sim_yrs){
+   
+      #create capital maps 
+      scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+      ps <- scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanLandPriceC,meanLandProteC,meanGSeasonC)
+   
+      m <- matrix(c(1,2,3,4,5,6,7,7,7),nrow = 3,ncol = 3,byrow = TRUE)
+      layout(mat = m,heights = c(0.45,0.45,0.1))
+  
+      for(psi in 1:6)
+      {
+        par(mar = c(2,2,1,1))
+        plot(ps[psi], pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = T, lty = 0, key.pos=NULL, reset=F)
+      }
+  
+      #the legend is its own plot
+      par(mar=c(0,0,0,0))
+      plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+      legend(x = "center",inset = 0,
+        legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
+  
+    },
+    video.name = paste0(data_dir,scenario,"_MuniOutput_Capitals_",scenario,".mp4"))
 
-    m <- matrix(c(1,2,3,3),nrow = 2,ncol = 2,byrow = TRUE)
-    layout(mat = m,heights = c(0.8,0.2))
-
-    plot(cDat_map["ObsMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
-    plot(cDat_map["ModMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
-    
-    par(mar=c(0,0,0,0))
-    plot(1, type = "n", axes=FALSE, xlab="", ylab="")
-    legend(x = "center",inset = 0, lc_labs, fill = lc_pal, title=paste0(yr), horiz = TRUE)
-    
-  },
-  video.name = paste0(data_dir,scenario,"_MuniOutput_LandUse_",scenario,".mp4"))
- 
-pr <- par()
-
-#capitals video
-saveVideo(
-  for(yr in sim_yrs){
- 
-    #create capital maps 
-    scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
-    ps <- scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanLandPriceC,meanLandProteC,meanGSeasonC)
- 
-    m <- matrix(c(1,2,3,4,5,6,7,7,7),nrow = 3,ncol = 3,byrow = TRUE)
-    layout(mat = m,heights = c(0.45,0.45,0.1))
-
-    for(psi in 1:6)
-    {
-      par(mar = c(2,2,1,1))
-      plot(ps[psi], pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = T, lty = 0, key.pos=NULL, reset=F)
-    }
-
-    #the legend is its own plot
-    par(mar=c(0,0,0,0))
-    plot(1, type = "n", axes=FALSE, xlab="", ylab="")
-    legend(x = "center",inset = 0,
-      legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
-
-  },
-  video.name = paste0(data_dir,scenario,"_MuniOutput_Capitals_",scenario,".mp4"))
-
+}
 
 
 #start of 8_analyseProduction.r
