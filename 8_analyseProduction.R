@@ -7,9 +7,9 @@ library(tidyverse)
 library(ggplot2)
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-07-31"
+scenario <- "Testing_2018-08-06d"
 runID <- "0-0"
-sim_yrs <- seq(2000, 2015, 1)   #consolidate these years
+sim_yrs <- seq(2000, 2004, 1)   #consolidate these years
 
 #output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
@@ -268,6 +268,12 @@ c <- crafty_dat %>%
   ggtitle("CRAFTY Demand")
 print(c)
 
+c <- crafty_dat %>% 
+  ggplot(aes(x = year, y = value_cells, fill = commodity)) + 
+  geom_bar(stat="identity", position="dodge") +
+  scale_y_continuous(name = "Cells", labels = scales::comma) +
+  ggtitle("CRAFTY Demand")
+print(c)
 
 
 if(pdfprint) {

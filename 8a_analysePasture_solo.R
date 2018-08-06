@@ -8,9 +8,14 @@ library(tidyverse)
 library(ggplot2)
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-08-06c"
+scenario <- "Testing_2018-08-06h"
 runID <- "0-0"
 sim_yrs <- seq(2000, 2015, 1)   #consolidate these years
+
+#output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
+pdfprint <- TRUE
+output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis_NoSTELLA.pdf")
+
 
 
 #year, service, measure, value 
@@ -70,13 +75,7 @@ for(i in seq_along(sim_yrs)){
 }
 
 
-c <- mod_dat %>%
-  filter(measure == "Sum") %>%
-  ggplot(aes(x = year, y = value, color = service)) + 
-      geom_line() +
-      scale_y_continuous(name = "CRAFTY units", labels = scales::comma) +
-      ggtitle("Sum Service")
-print(c)
+
 
 
 
@@ -86,7 +85,7 @@ mod_serv <- mod_dat %>%
   rename(commodity = service) %>%
   mutate(measure = "Production") %>%
   mutate(value_gg = if_else(commodity == "Soy", value * 30,
-    if_else(commodity == "Maize", value * 20, value * 1.9)
+    if_else(commodity == "Maize", value * 20, value * 1.9)  #this value of 1.9 comes from standard mean proportionmilk of all states then use to weight average of milk and meat intensities (2.5*0.74)+(0.275*0.26)
   )) %>%
   mutate(value_gg = round(value_gg,1)) %>%
   dplyr::select(-value) %>%
@@ -170,6 +169,18 @@ summary(all_dat)
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442")
 
 
+if(pdfprint) {
+  pdf(file = output_name)
+}
+
+c <- mod_dat %>%
+  filter(measure == "Sum") %>%
+  ggplot(aes(x = year, y = value, color = service)) + 
+      geom_line() +
+      scale_y_continuous(name = "CRAFTY units", labels = scales::comma) +
+      ggtitle("Sum Service")
+print(c)
+
 a <- all_dat %>% 
   filter(commodity == "Soy") %>%
   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
@@ -196,8 +207,13 @@ a <- all_dat %>%
   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
   geom_line() +
   scale_colour_manual(values=cbPalette) +
+  scale_y_continuous(limits = c(0, 50000)) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Pasture") 
 print(a)
   
+if(pdfprint) {
+  dev.off()
+}
+
