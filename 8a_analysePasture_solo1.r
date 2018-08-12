@@ -8,7 +8,7 @@ library(tidyverse)
 library(ggplot2)
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-08-06h"
+scenario <- "Testing_2018-08-12"
 runID <- "0-0"
 sim_yrs <- seq(2000, 2015, 1)   #consolidate these years
 
@@ -207,7 +207,7 @@ a <- all_dat %>%
   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
   geom_line() +
   scale_colour_manual(values=cbPalette) +
-  scale_y_continuous(limits = c(0, 50000)) +
+  scale_y_continuous(limits = c(0, 100000)) +
   ylab("Value (gg)") +
   xlab("Year") +
   ggtitle("Pasture") 

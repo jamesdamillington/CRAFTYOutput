@@ -147,7 +147,7 @@ sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years
 fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years 
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-07-31"
+scenario <- "Testing_2018-08-03"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
