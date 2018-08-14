@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-08-06h"
+scenario <- "Testing_2018-08-14c"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -30,6 +30,8 @@ fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
 video_output <- FALSE
+comp_matrices <- TRUE
+
 
 #required packages
 library(tidyverse)
@@ -717,11 +719,12 @@ if(pdfprint) {
 }
 #####
 
-#start of 7_outputMovies.r
+#start of 7a_outputRasterAnalysis.r
 #####
 #First, Raster maps
 mps <- list()
 lus <- list()
+s <- stack()
 
 for(i in seq_along(sim_yrs)){
   
@@ -739,7 +742,12 @@ for(i in seq_along(sim_yrs)){
   Lprice <- outputRaster(output, "Capital:Land Price")
   Lpro <- outputRaster(output, "Capital:Land Protection")
   GrowS <- outputRaster(output, "Capital:Growing Season")
-  
+
+  #create stack of LU for comparison matrices
+  LU[LU == -1] <- NA #remove LazyFR if present
+  if(i == 1) { s <- stack(LU) }
+  else { s <- stack(s, LU) }
+
   pl <- list()  #this will hold the plots for the all map for this year
   lul <- list()  #this will hold the plots for the LU map for this year
   
@@ -789,6 +797,36 @@ for(i in seq_along(sim_yrs)){
     
 }
 
+if(comp_matrices)
+{
+  
+  mat_yrs <- head(sim_yrs, -1) #drop last element of the list
+  
+  
+  output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_MapTransitions.pdf")
+
+  pdf(file = output_name)
+  
+  #next create the comparison matrices for each pair of maps
+  for(i in seq_along(mat_yrs)){
+    
+    #set labels for error matrix (No SNat in yr 2000)  
+    if(mat_yrs[i] == 2000) {  LCnames <- c("Soy", "Mze", "Dblc", "PNat", "OAgri","Oth","Pas","SNat")}  
+    else { LCnames <- c("Soy", "Mze", "Dblc", "SNat", "PNat", "OAgri","Oth","Pas") }
+
+    xtab <- crosstabm(s[[i]], s[[i+1]])
+    colnames(xtab) <- LCnames
+    rownames(xtab) <- LCnames
+  
+    grid.arrange(top = paste0("Transitions ",sim_yrs[i],"-",sim_yrs[i+1]), tableGrob(xtab))  
+  }
+  
+  #close pdf device
+  dev.off()
+  
+}
+
+
 if(video_output)
 {
   #make videos here by looping through list
@@ -824,6 +862,7 @@ lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
 #create capitals palette
 cap_pal <- viridis(100)
 brks <- seq(from=0,to=1,by=0.01)  #101 values
+
 
 #create figures
 for(yr in sim_yrs){
@@ -896,7 +935,7 @@ if(video_output)
     },
     video.name = paste0(data_dir,scenario,"_MuniOutput_LandUse_",scenario,".mp4"))
    
-  pr <- par()
+
   
   #capitals video
   saveVideo(
@@ -925,6 +964,7 @@ if(video_output)
     video.name = paste0(data_dir,scenario,"_MuniOutput_Capitals_",scenario,".mp4"))
 
 }
+
 
 
 #start of 8_analyseProduction.r
@@ -1179,3 +1219,5 @@ if(pdfprint) {
   dev.off()
 }
 #####
+
+dev.off() #reset par https://stackoverflow.com/a/31909011

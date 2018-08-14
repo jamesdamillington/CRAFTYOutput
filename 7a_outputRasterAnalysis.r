@@ -176,7 +176,6 @@ for(i in seq_along(sim_yrs)){
   GrowS <- outputRaster(output, "Capital:Growing Season")
   
   #create stack of LU for comparison matrices
-  
   LU[LU == -1] <- NA #remove LazyFR if present
   if(i == 1) { s <- stack(LU) }
   else { s <- stack(s, LU) }
@@ -240,9 +239,6 @@ if(comp_matrices)
   output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_MapTransitions.pdf")
 
   pdf(file = output_name)
-  
-  #!todo incorporate final comparison matrices code into A_alloutput script
-  
   
   #next create the comparison matrices for each pair of maps
   for(i in seq_along(mat_yrs)){
