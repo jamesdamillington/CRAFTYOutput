@@ -240,6 +240,8 @@ if(comp_matrices)
   !todo
   #open pdf device with filename
   
+  !todo incorporate final comparison matrices code into A_alloutput script
+  
   mat_yrs <- head(data_yrs, -1) #drop last element of the list
   LCnames <- c("Nat", "OtherAgri", "Agri", "Other", "Pasture")  #used to label error matrix 
   
