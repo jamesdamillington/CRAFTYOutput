@@ -29,10 +29,12 @@
 #Outputs can be a combination of:
 #1. figures showing raster and vector maps of land use and Captials (.png files); years indicated by fig_yrs
 #2. movies of 1. (.mp4); if video_output is TRUE
+#3. comparison matrices for pairs of maps (.pdf); if comp_matrices is TRUE
 
 rm(list=ls())
 
 library(raster)
+library(diffeR)
 library(tidyverse)
 library(rasterVis)
 library(gridExtra)
@@ -155,6 +157,7 @@ cl <- "PastureB"  #classification for observed LU map
 
 #outputs to create
 video_output <- FALSE
+comp_matrices <- TRUE
 
 #First, Raster maps
 mps <- list()
@@ -176,6 +179,10 @@ for(i in seq_along(sim_yrs)){
   Lprice <- outputRaster(output, "Capital:Land Price")
   Lpro <- outputRaster(output, "Capital:Land Protection")
   GrowS <- outputRaster(output, "Capital:Growing Season")
+  
+  #create stack of LU for comparison matrices
+  if(i == 1) { s <- stack(lc) }
+  else { s <- stack(s, lc) }
   
   pl <- list()  #this will hold the plots for the all map for this year
   lul <- list()  #this will hold the plots for the LU map for this year
@@ -225,6 +232,40 @@ for(i in seq_along(sim_yrs)){
   }
     
 }
+
+
+if(comp_matrices)
+{
+  
+  !todo
+  #open pdf device with filename
+  
+  mat_yrs <- head(data_yrs, -1) #drop last element of the list
+  LCnames <- c("Nat", "OtherAgri", "Agri", "Other", "Pasture")  #used to label error matrix 
+  
+  #next create the comparison matrices for each pair of maps
+  for(i in seq_along(mat_yrs)){
+   
+    #i <- 1 #for testing
+    
+    !todo
+    #output the crosstab  (how to create new page for each?)  
+    cat("  \n","  \n","Crosstab ",data_yrs[i],"-",data_yrs[i+1],"  \n") 
+    xtab <- crosstabm(s[[i]], s[[i+1]])
+    colnames(xtab) <- LCnames
+    rownames(xtab) <- LCnames
+    cat("  \n")
+    print(kable(xtab))
+    cat("  \n")
+  
+  }
+  
+  #close pdf device
+  #dev.off()
+  
+}
+
+
 
 #make videos here by looping through list
 if(video_output)
