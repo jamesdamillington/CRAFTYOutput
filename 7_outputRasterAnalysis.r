@@ -41,6 +41,7 @@ library(gridExtra)
 library(animation)
 library(sf)
 library(viridisLite)
+library(gridExtra)
 
 ##FUNCTIONS
 #####
@@ -151,7 +152,7 @@ sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years
 fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years 
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-08-03"
+scenario <- "Testing_2018-08-14c"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -162,8 +163,11 @@ comp_matrices <- TRUE
 #First, Raster maps
 mps <- list()
 lus <- list()
+s <- stack()
 
 for(i in seq_along(sim_yrs)){
+  
+  #i = 1
   
   print(paste0("raster: ", sim_yrs[i]))
 
@@ -181,8 +185,10 @@ for(i in seq_along(sim_yrs)){
   GrowS <- outputRaster(output, "Capital:Growing Season")
   
   #create stack of LU for comparison matrices
-  if(i == 1) { s <- stack(lc) }
-  else { s <- stack(s, lc) }
+  
+  LU[LU == -1] <- NA #remove LazyFR if present
+  if(i == 1) { s <- stack(LU) }
+  else { s <- stack(s, LU) }
   
   pl <- list()  #this will hold the plots for the all map for this year
   lul <- list()  #this will hold the plots for the LU map for this year
@@ -237,33 +243,32 @@ for(i in seq_along(sim_yrs)){
 if(comp_matrices)
 {
   
-  !todo
-  #open pdf device with filename
+  mat_yrs <- head(sim_yrs, -1) #drop last element of the list
   
-  !todo incorporate final comparison matrices code into A_alloutput script
   
-  mat_yrs <- head(data_yrs, -1) #drop last element of the list
-  LCnames <- c("Nat", "OtherAgri", "Agri", "Other", "Pasture")  #used to label error matrix 
+  output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_MapTransitions.pdf")
+
+  pdf(file = output_name)
+  
+  #!todo incorporate final comparison matrices code into A_alloutput script
+  
   
   #next create the comparison matrices for each pair of maps
   for(i in seq_along(mat_yrs)){
-   
-    #i <- 1 #for testing
     
-    !todo
-    #output the crosstab  (how to create new page for each?)  
-    cat("  \n","  \n","Crosstab ",data_yrs[i],"-",data_yrs[i+1],"  \n") 
+    #set labels for error matrix (No SNat in yr 2000)  
+    if(mat_yrs[i] == 2000) {  LCnames <- c("Soy", "Mze", "Dblc", "PNat", "OAgri","Oth","Pas","SNat")}  
+    else { LCnames <- c("Soy", "Mze", "Dblc", "SNat", "PNat", "OAgri","Oth","Pas") }
+
     xtab <- crosstabm(s[[i]], s[[i+1]])
     colnames(xtab) <- LCnames
     rownames(xtab) <- LCnames
-    cat("  \n")
-    print(kable(xtab))
-    cat("  \n")
   
+    grid.arrange(top = paste0("Transitions ",sim_yrs[i],"-",sim_yrs[i+1]), tableGrob(xtab))  
   }
   
   #close pdf device
-  #dev.off()
+  dev.off()
   
 }
 
