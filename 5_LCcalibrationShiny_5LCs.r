@@ -14,10 +14,11 @@ library(shiny)
 library(leaflet)
 
 #this directory should exist and contain the CRAFTYmunisServCap.csv
-run_name <- "test"
+scenario <- "Testing_2018-08-16c"
+runID <- "0-0"
 
 #input/putput variables
-cDat <- readr::read_csv(paste0("Data/",run_name,"/CRAFTYmunisLC.csv"))
+cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisLC.csv"))
 
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
@@ -66,11 +67,11 @@ plotPolys <- function(mypal = "Greens", paltype = "numeric", shp = BR2000, data 
 #####
 ui<-fluidPage(
             mainPanel(
-              selectInput("inpt", "Select Map:", c("diffcPropLC1" = "LC1",
-                "diffcPropLC2" = "LC2",
-                "diffcPropLC3" = "LC3",
-                "diffcPropLC4"="LC4",
-                "diffcPropLC5"="LC5",
+              selectInput("inpt", "Select Map:", c("diffcPropNat" = "LC1",
+                "diffcPropOAg" = "OAg",
+                "diffcPropAg" = "LC3",
+                "diffcPropOth"="LC4",
+                "diffcPropPas"="LC5",
                 "ObsMode" = "oM",
                 "ModMode" = "mM",
                 "ModeError" = "eM",
