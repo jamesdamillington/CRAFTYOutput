@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-08-14c"
+scenario <- "Testing_2018-08-23f"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -20,12 +20,12 @@ data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been
 
 yrs <- seq(2000, 2015, 1)        #all years of analysis
 calib_yrs <- c(2005, 2010, 2015) #years for calibration analysis
-#calib_yrs <- seq(2000, 2004, 1) #years for calibration analysis
+#calib_yrs <- seq(2000, 2003, 1) #years for calibration analysis
 
 sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years (will usually be identical to yrs above)
-fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years 
-#sim_yrs <- seq(2000, 2004, 1)   #movie made for all these years (will usually be identical to yrs above)
-#fig_yrs <- seq(2000, 2004, 1) #figures output for only these years 
+#fig_yrs <- seq(2000, 2015, 1)#figures output for only these years 
+#sim_yrs <- seq(2000, 2003, 1)   #movie made for all these years (will usually be identical to yrs above)
+fig_yrs <- seq(2000, 2015, 5) #figures output for only these years 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
@@ -90,8 +90,10 @@ getCapitals <- function(data)
       sumGSeasonC = sum(Capital.Growing.Season),
       sumOtherAgriC = sum(Capital.Other.Agriculture),
       sumOtherC = sum(Capital.Other),
-      sumLandProteC = sum(Capital.Land.Protection),
-      sumLandPriceC = sum(Capital.Land.Price),
+      sumSoyProteC = sum(Capital.Soy.Protection),
+      sumMaizeProteC = sum(Capital.Maize.Protection),
+      sumPasProteC = sum(Capital.Pasture.Protection),
+      sumOAgriProteC = sum(Capital.OAgri.Protection),
       meanAgriC = round(mean(Capital.Agriculture),3),
       meanNatureC = round(mean(Capital.Nature),3),
       meanHumanC = round(mean(Capital.Human),3),
@@ -102,7 +104,10 @@ getCapitals <- function(data)
       meanGSeasonC = round(mean(Capital.Growing.Season),3),
       meanOtherAgriC = round(mean(Capital.Other.Agriculture),3),
       meanOtherC = round(mean(Capital.Other),3),
-      meanLandProteC = round(mean(Capital.Land.Protection),3),
+      meanSoyProteC = round(mean(Capital.Soy.Protection),3),
+      meanMaizeProteC = round(mean(Capital.Maize.Protection),3),
+      meanPasProteC = round(mean(Capital.Pasture.Protection),3),
+      meanOAgriProteC = round(mean(Capital.OAgri.Protection),3),
       meanLandPriceC = round(mean(Capital.Land.Price),3)
     ) -> services
   
