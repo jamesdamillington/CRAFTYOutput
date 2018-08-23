@@ -12,20 +12,20 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-08-23h"
+scenario <- "Testing_2018-08-23i"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
 data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been saved
 
-yrs <- seq(2000, 2015, 1)        #all years of analysis
+yrs <- seq(2001, 2015, 1)        #all years of analysis
 calib_yrs <- c(2005, 2010, 2015) #years for calibration analysis
 #calib_yrs <- seq(2000, 2003, 1) #years for calibration analysis
 
-sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years (will usually be identical to yrs above)
+sim_yrs <- seq(2001, 2015, 1)   #movie made for all these years (will usually be identical to yrs above)
 #fig_yrs <- seq(2000, 2015, 1)#figures output for only these years 
 #sim_yrs <- seq(2000, 2003, 1)   #movie made for all these years (will usually be identical to yrs above)
-fig_yrs <- seq(2000, 2015, 5) #figures output for only these years 
+fig_yrs <- c(2005, 2010, 2015) #figures output for only these years 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
@@ -822,7 +822,7 @@ if(comp_matrices)
   for(i in seq_along(mat_yrs)){
     
     #set labels for error matrix (No SNat in yr 2000)  
-    if(mat_yrs[i] == 2000) {  LCnames <- c("Soy", "Mze", "Dblc", "PNat", "OAgri","Oth","Pas","SNat")}  
+    if(mat_yrs[i] == sim_yrs[1]) {  LCnames <- c("Soy", "Mze", "Dblc", "PNat", "OAgri","Oth","Pas","SNat")}  
     else { LCnames <- c("Soy", "Mze", "Dblc", "SNat", "PNat", "OAgri","Oth","Pas") }
 
     xtab <- crosstabm(s[[i]], s[[i+1]])

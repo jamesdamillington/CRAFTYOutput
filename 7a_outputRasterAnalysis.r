@@ -244,7 +244,7 @@ if(comp_matrices)
   for(i in seq_along(mat_yrs)){
     
     #set labels for error matrix (No SNat in yr 2000)  
-    if(mat_yrs[i] == 2000) {  LCnames <- c("Soy", "Mze", "Dblc", "PNat", "OAgri","Oth","Pas","SNat")}  
+    if(mat_yrs[i] == sim_yrs[1]) {  LCnames <- c("Soy", "Mze", "Dblc", "PNat", "OAgri","Oth","Pas","SNat")}  
     else { LCnames <- c("Soy", "Mze", "Dblc", "SNat", "PNat", "OAgri","Oth","Pas") }
 
     xtab <- crosstabm(s[[i]], s[[i+1]])
