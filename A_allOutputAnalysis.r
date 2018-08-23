@@ -684,7 +684,7 @@ for(yr in calib_yrs){
   cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
 
   #create land cover palette
-  map_pal <- c("darkgreen", "darkcyan", "green", "grey", "khaki")
+  map_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
 
   #plot observed vs modelled modal muni land cover
   plot(cDat_map["ObsMode"], pal = map_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Observed Mode LC"), key.pos = NULL)

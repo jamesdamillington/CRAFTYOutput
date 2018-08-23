@@ -8,7 +8,7 @@ rm(list=ls())
 calib_yrs <- c(2005, 2010, 2015)
 
 #maps can be plotted to pdf by setting following variable appropriately (TRUE/FALSE)
-pdfplot <- TRUE
+pdfplot <- F
 
 
 library(tidyverse)
@@ -16,7 +16,7 @@ library(sf)
 library(RColorBrewer)  #for plotting
 
 #this directory should exist and contain the CRAFTYmunisServCap.csv
-scenario <- "Testing_2018-07-31"
+scenario <- "Testing_2018-08-22j"
 runID <- "0-0"
 
 #input/putput variables
@@ -39,7 +39,7 @@ for(yr in calib_yrs){
   cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
 
   #create land cover palette
-  map_pal <- c("darkgreen", "darkcyan", "green", "grey", "khaki")
+  map_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
 
   #plot observed vs modelled modal muni land cover
   plot(cDat_map["ObsMode"], pal = map_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Observed Mode LC"), key.pos = NULL)
