@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-08-23f"
+scenario <- "Testing_2018-08-23g"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -516,13 +516,18 @@ for(yr in calib_yrs){
 #convert year and LCs to factors
 mods <- mods %>%
   mutate(Year = as.factor(Year)) %>%
-  mutate(LC = factor(LC, labels = c("Nat", "OtherAgri", "Agri", "Other","Pasture"))) #JM! check this is right after testing
+  mutate(LC = factor(LC, labels = c("Nature", "OtherAgri", "Agri", "Other","Pasture"))) 
 
 print(mods)
 grid.arrange(tableGrob(mods), top="Model Parameters")
 
+#create colours for plot
+myCols <- c("forestgreen","darkcyan","wheat3","black","orange2")
+names(myCols) <- c('Nature',"OtherAgri","Agri","Other","Pasture")
+
 #barplot of r2 by year and LC
 p <- ggplot(mods, aes(x = Year, y = r2, fill = LC)) +
+  scale_fill_manual(name = "LC",values = myCols) +
   geom_bar(stat="identity", position='dodge') +
   ggtitle("Model Comparison") 
 print(p)
@@ -577,7 +582,7 @@ cDat_long <- bind_rows(cDat_long_mod, cDat_long_obs)
 cDat_long <- cDat_long %>%
   mutate(LC = 
     if_else(LC == "Nat.Mod" | LC == "Nat.Obs", "Nature",
-    if_else(LC == "OAgri.Mod" | LC == "OAgri.Obs", "OAgri",
+    if_else(LC == "OAgri.Mod" | LC == "OAgri.Obs", "OtherAgri",
     if_else(LC == "Agri.Mod" | LC == "Agri.Obs", "Agri",
     if_else(LC == "Other.Mod" | LC == "Other.Obs", "Other",
       "Pasture")))))
@@ -588,6 +593,7 @@ cDat_long <- cDat_long %>%
 c <- cDat_long %>% 
   ggplot(aes(x = Year, y = cells,color = LC, linetype = source)) + 
   geom_line(size = 1) +
+  scale_colour_manual(name = "LC",values = myCols) +
   scale_y_continuous(name = "Cells", labels = scales::comma) +
   ggtitle("CRAFTY Output")
 print(c)
