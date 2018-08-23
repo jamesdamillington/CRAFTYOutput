@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-08-23g"
+scenario <- "Testing_2018-08-23h"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 

@@ -8,7 +8,7 @@ rm(list=ls())
 calib_yrs <- c(2005, 2010, 2015)
 
 #maps can be plotted to pdf by setting following variable appropriately (TRUE/FALSE)
-pdfplot <- F
+pdfplot <- T
 
 
 library(tidyverse)
@@ -16,7 +16,7 @@ library(sf)
 library(RColorBrewer)  #for plotting
 
 #this directory should exist and contain the CRAFTYmunisServCap.csv
-scenario <- "Testing_2018-08-22j"
+scenario <- "Testing_2018-08-23g"
 runID <- "0-0"
 
 #input/putput variables
@@ -43,15 +43,15 @@ for(yr in calib_yrs){
 
   #plot observed vs modelled modal muni land cover
   plot(cDat_map["ObsMode"], pal = map_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Observed Mode LC"), key.pos = NULL)
-  legend("bottomright", cex = 1.3, c("Nature", "Other Agri", "Agriculture", "Other", "Pasture"), fill = map_pal)
+  legend("bottomright", cex = 1.3, c("Nature", "Other Agri", "Agriculture", "Other", "Pasture"), fill = map_pal, bg = "white")
   
   plot(cDat_map["ModMode"], pal = map_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LC"), key.pos = NULL)
-  legend("bottomright", cex = 1.3, c("Nature", "Other Agri", "Agriculture", "Other", "Pasture"), fill = map_pal)
+  legend("bottomright", cex = 1.3, c("Nature", "Other Agri", "Agriculture", "Other", "Pasture"), fill = map_pal, bg = "white")
 
   
   #map of muni mode correct/incorrect   
   plot(cDat_map["diffcMode"], pal = c("darkgreen","red"), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Model vs Obs Mode Comparison"), key.pos = NULL)  
-  legend("bottomright", cex = 1.3, c("Correct", "Incorrect"), fill = c("darkgreen","red"))
+  legend("bottomright", cex = 1.3, c("Correct", "Incorrect"), fill = c("darkgreen","red"), bg = "white")
   
   
   #get max value for colour breaks below
