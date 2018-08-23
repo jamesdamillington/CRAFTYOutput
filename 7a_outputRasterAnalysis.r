@@ -35,7 +35,7 @@ sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years
 fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years 
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-08-14c"
+scenario <- "Testing_2018-08-23g"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -172,9 +172,9 @@ for(i in seq_along(sim_yrs)){
   OAg <- outputRaster(output, "Capital:Other Agriculture")
   Aces <- outputRaster(output, "Capital:Acessibility")
   Lprice <- outputRaster(output, "Capital:Land Price")
-  Lpro <- outputRaster(output, "Capital:Land Protection")
+  Spro <- outputRaster(output, "Capital:Soy Protection")
   GrowS <- outputRaster(output, "Capital:Growing Season")
-  
+
   #create stack of LU for comparison matrices
   LU[LU == -1] <- NA #remove LazyFR if present
   if(i == 1) { s <- stack(LU) }
@@ -198,8 +198,8 @@ for(i in seq_along(sim_yrs)){
   #ras_pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
   ras_pal <- viridis(100)
   
-  rl <- list(Agri, Nat, Infra, OAg, Aces, Lprice, Lpro, GrowS)
-  rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C", "Land Price", "Land Protection", "Growing Season") 
+  rl <- list(Agri, Nat, Infra, OAg, Aces, Lprice, Spro, GrowS)
+  rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
   
   for(j in seq_along(rl)){
     

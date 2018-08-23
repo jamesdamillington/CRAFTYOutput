@@ -751,7 +751,7 @@ for(i in seq_along(sim_yrs)){
   OAg <- outputRaster(output, "Capital:Other Agriculture")
   Aces <- outputRaster(output, "Capital:Acessibility")
   Lprice <- outputRaster(output, "Capital:Land Price")
-  Lpro <- outputRaster(output, "Capital:Land Protection")
+  Spro <- outputRaster(output, "Capital:Soy Protection")
   GrowS <- outputRaster(output, "Capital:Growing Season")
 
   #create stack of LU for comparison matrices
@@ -777,8 +777,8 @@ for(i in seq_along(sim_yrs)){
   #ras_pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
   ras_pal <- viridis(100)
   
-  rl <- list(Agri, Nat, Infra, OAg, Aces, Lprice, Lpro, GrowS)
-  rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C", "Land Price", "Land Protection", "Growing Season") 
+  rl <- list(Agri, Nat, Infra, OAg, Aces, Lprice, Spro, GrowS)
+  rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
   
   for(j in seq_along(rl)){
     
