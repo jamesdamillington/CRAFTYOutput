@@ -9,7 +9,7 @@
 #1. Modelled LC (mode for muni)
 #2. Agri Capital (mean for muni)
 #3. Nature Capital (mean for muni)
-#4. Infrastructure Capital (mean for muni)
+#4. Port Access Capital (mean for muni)
 #5. Other Agri Capital (mean for muni)
 #6. Acessibility - only for raster
 #7. LandPrice 
@@ -168,7 +168,7 @@ for(i in seq_along(sim_yrs)){
   LU <- outputRaster(output, "LandUseIndex")
   Agri <- outputRaster(output, "Capital:Agriculture")
   Nat <- outputRaster(output, "Capital:Nature")
-  Infra <- outputRaster(output, "Capital:Infrastructure")
+  Infra <- outputRaster(output, "Capital:Port Access")
   OAg <- outputRaster(output, "Capital:Other Agriculture")
   Aces <- outputRaster(output, "Capital:Acessibility")
   Lprice <- outputRaster(output, "Capital:Land Price")
@@ -194,12 +194,11 @@ for(i in seq_along(sim_yrs)){
   lul[[1]] <- ObsLUmap
   lul[[2]] <- ModLUmap
   
-  #now create Capital maps (all with same palette)
   #ras_pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
   ras_pal <- viridis(100)
   
   rl <- list(Agri, Nat, Infra, OAg, Aces, Lprice, Spro, GrowS)
-  rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
+  rl_names <- c("Agriculture C", "Nature C", "Port Access C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
   
   for(j in seq_along(rl)){
     

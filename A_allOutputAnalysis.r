@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-08-23l"
+scenario <- "Testing_2018-09-04a"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -84,9 +84,9 @@ getCapitals <- function(data)
       sumNatureC = sum(Capital.Nature),
       sumHumanC = sum(Capital.Human),
       sumDevC = sum(Capital.Development),
-      sumInfraC = sum(Capital.Infrastructure),
+      sumInfraC = sum(Capital.Port.Access),
       sumEconC = sum(Capital.Economic),
-      sumAcessC = sum(Capital.Acessibility),
+      sumAcessC = sum(Capital.Nature.Access),
       sumGSeasonC = sum(Capital.Growing.Season),
       sumOtherAgriC = sum(Capital.Other.Agriculture),
       sumOtherC = sum(Capital.Other),
@@ -98,9 +98,9 @@ getCapitals <- function(data)
       meanNatureC = round(mean(Capital.Nature),3),
       meanHumanC = round(mean(Capital.Human),3),
       meanDevC = round(mean(Capital.Development),3),
-      meanInfraC = round(mean(Capital.Infrastructure),3),
+      meanInfraC = round(mean(Capital.Port.Access),3),
       meanEconC = round(mean(Capital.Economic),3),
-      meanAcessC = round(mean(Capital.Acessibility),3),
+      meanAcessC = round(mean(Capital.Nature.Access),3),
       meanGSeasonC = round(mean(Capital.Growing.Season),3),
       meanOtherAgriC = round(mean(Capital.Other.Agriculture),3),
       meanOtherC = round(mean(Capital.Other),3),
@@ -747,9 +747,9 @@ for(i in seq_along(sim_yrs)){
   LU <- outputRaster(output, "LandUseIndex")
   Agri <- outputRaster(output, "Capital:Agriculture")
   Nat <- outputRaster(output, "Capital:Nature")
-  Infra <- outputRaster(output, "Capital:Infrastructure")
+  Infra <- outputRaster(output, "Capital:Port Access")
   OAg <- outputRaster(output, "Capital:Other Agriculture")
-  Aces <- outputRaster(output, "Capital:Acessibility")
+  Aces <- outputRaster(output, "Capital:Nature Access")
   Lprice <- outputRaster(output, "Capital:Land Price")
   Spro <- outputRaster(output, "Capital:Soy Protection")
   GrowS <- outputRaster(output, "Capital:Growing Season")
@@ -778,7 +778,7 @@ for(i in seq_along(sim_yrs)){
   ras_pal <- viridis(100)
   
   rl <- list(Agri, Nat, Infra, OAg, Aces, Lprice, Spro, GrowS)
-  rl_names <- c("Agriculture C", "Nature C", "Infrastructure C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
+  rl_names <- c("Agriculture C", "Nature C", "Port Access C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
   
   for(j in seq_along(rl)){
     
