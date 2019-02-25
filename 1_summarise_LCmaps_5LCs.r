@@ -73,12 +73,12 @@ classification <- "PastureB"
 #load the rasters
 munis.r <- raster(paste0(input_path,"CRAFTYInput/Data/sim10_BRmunis_latlon_5km_2018-04-27.asc"))
 
-calib_yrs <- seq(2000, 2015, 1)
-#calib_yrs <- c(2000, 2005)
+#calib_yrs <- seq(2001, 2015, 1)
+calib_yrs <- c(2000)
 
 for(yr in calib_yrs){
 
-  inname <- paste0(input_path,"LandCover/MapBiomas23/ClassificationComparison/ASCII/brazillc_",yr,"_",classification,".asc")
+  inname <- paste0("Data/ObservedLCmaps/PlantedArea_brazillc_",classification,"_",yr,".asc")
   outname <- paste0("Data/SummaryTables/LCs",yr,"_",classification,".csv")
   
   lc <- raster(inname)

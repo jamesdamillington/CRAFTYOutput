@@ -12,7 +12,7 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2018-09-04a"
+scenario <- "Testing_2019-02-21c"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -754,6 +754,7 @@ for(i in seq_along(sim_yrs)){
   Spro <- outputRaster(output, "Capital:Soy Protection")
   GrowS <- outputRaster(output, "Capital:Growing Season")
 
+  print("readLU")
   #create stack of LU for comparison matrices
   LU[LU == -1] <- NA #remove LazyFR if present
   if(i == 1) { s <- stack(LU) }
@@ -766,8 +767,8 @@ for(i in seq_along(sim_yrs)){
   ModLUmap <- makeModLUmap(LU, sim_yrs[i])
   pl[[1]] <- ModLUmap
   
-  
-  ObsLU <- raster(paste0("Data/ObservedLCmaps/brazillc_",sim_yrs[i],"_",cl,".asc"))
+  print("readObsLU")
+  ObsLU <- raster(paste0("Data/ObservedLCmaps/PlantedArea_brazillc_",cl,"_",sim_yrs[i],".asc"))
 
   ObsLUmap <- makeObsLUmap(ObsLU, sim_yrs[i])
   lul[[1]] <- ObsLUmap
@@ -793,6 +794,8 @@ for(i in seq_along(sim_yrs)){
     #add it to the list
     pl[[j+1]] <- p    #+1 because LU is in first slot
   }
+  
+  print("marrange")
   
   mps[[i]] <- marrangeGrob(pl, nrow = 3, ncol = 3, top = paste0(sim_yrs[i]))
   lus[[i]] <- marrangeGrob(lul, nrow = 1, ncol = 2, top = paste0(sim_yrs[i]))
@@ -1066,7 +1069,7 @@ tbl_df(mod_dat)
 #loop through all files 
 for(i in seq_along(sim_yrs)){
  
-  filen <- paste0("FromMaestro",sim_yrs[i],".csv")
+  filen <- paste0("0_FromMaestro",sim_yrs[i],"_",scenario,".csv")
   
   dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
 
@@ -1140,7 +1143,7 @@ tbl_df(crafty_dat)
 
 for(i in seq_along(sim_yrs)){
  
-  filen <- paste0("FromMaestro",sim_yrs[i],".csv")
+  filen <- paste0("0_FromMaestro",sim_yrs[i],"_",scenario,".csv")
   
   dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
 

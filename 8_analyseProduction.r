@@ -7,9 +7,9 @@ library(tidyverse)
 library(ggplot2)
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-08-06d"
+scenario <- "Testing_2019-01-14"
 runID <- "0-0"
-sim_yrs <- seq(2000, 2004, 1)   #consolidate these years
+sim_yrs <- seq(2001, 2015, 1)   #consolidate these years
 
 #output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
@@ -100,7 +100,7 @@ tbl_df(mod_dat)
 #loop through all files 
 for(i in seq_along(sim_yrs)){
  
-  filen <- paste0("FromMaestro",sim_yrs[i],".csv")
+  filen <- paste0("0_FromMaestro",sim_yrs[i],"_",scenario,".csv")
   
   dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
 
@@ -182,7 +182,7 @@ tbl_df(crafty_dat)
 
 for(i in seq_along(sim_yrs)){
  
-  filen <- paste0("FromMaestro",sim_yrs[i],".csv")
+  filen <- paste0("0_FromMaestro",sim_yrs[i],"_",scenario,".csv")
   
   dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
 

@@ -4,14 +4,14 @@
 rm(list=ls())
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-08-22j"
+scenario <- "Testing_2018-08-23g"
 runID <- "0-0"
 
 #script assumes there are three calibration years (2005, 2010, 2015); edit next line if that is not correct
 calib_yrs <- c(2005, 2010, 2015)
 
 #output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
-pdfprint <- F
+pdfprint <- T
 
 library(tidyverse)
 library(caret)   #for confusionMatrix

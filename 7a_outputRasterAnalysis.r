@@ -31,11 +31,11 @@ library(sf)
 library(viridisLite)
 
 
-sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years
-fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years 
+sim_yrs <- seq(2001, 2015, 1)   #movie made for all these years
+fig_yrs <- c(2001, 2005, 2010, 2015) #figures output for only these years 
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-08-23g"
+scenario <- "Testing_2018-09-27e"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -170,7 +170,7 @@ for(i in seq_along(sim_yrs)){
   Nat <- outputRaster(output, "Capital:Nature")
   Infra <- outputRaster(output, "Capital:Port Access")
   OAg <- outputRaster(output, "Capital:Other Agriculture")
-  Aces <- outputRaster(output, "Capital:Acessibility")
+  Aces <- outputRaster(output, "Capital:Nature Access")
   Lprice <- outputRaster(output, "Capital:Land Price")
   Spro <- outputRaster(output, "Capital:Soy Protection")
   GrowS <- outputRaster(output, "Capital:Growing Season")
@@ -188,7 +188,7 @@ for(i in seq_along(sim_yrs)){
   pl[[1]] <- ModLUmap
   
   
-  ObsLU <- raster(paste0("Data/ObservedLCmaps/brazillc_",sim_yrs[i],"_",cl,".asc"))
+  ObsLU <- raster(paste0("Data/ObservedLCmaps/PlantedArea_brazillc_",cl,"_",sim_yrs[i],".asc"))
 
   ObsLUmap <- makeObsLUmap(ObsLU, sim_yrs[i])
   lul[[1]] <- ObsLUmap
