@@ -16,8 +16,28 @@ library(sf)
 library(RColorBrewer)  #for plotting
 
 #this directory should exist and contain the CRAFTYmunisServCap.csv
-scenario <- "Testing_2018-08-23g"
+scenario <- "Testing_2019-02-21"
 runID <- "0-0"
+
+#specify states to plot (for all states provide empty list)
+#states <- c()  #all states
+states <- c(51) #MT
+
+
+#funciton to get correct LC pallete colours (e.g. if a given LC is missing) 
+lc_pal_function <- function(dat){
+  
+  pal <- c()
+  
+  if(is.element(1,unlist(dat))) pal <- c(pal, "forestgreen")
+  if(is.element(2,unlist(dat))) pal <- c(pal, "darkcyan")
+  if(is.element(3,unlist(dat))) pal <- c(pal, "wheat2")
+  if(is.element(4,unlist(dat))) pal <- c(pal, "black")
+  if(is.element(5,unlist(dat))) pal <- c(pal, "orange2")
+
+  return(pal)
+}
+
 
 #input/putput variables
 output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_LCcomparisonMaps.pdf")
@@ -32,27 +52,53 @@ if(pdfplot) {
   pdf(file = output_name)
 }
 
+#create default land cover palette
+lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
+lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
+  
 ## Maps
 #loop through years, printing maps
 for(yr in calib_yrs){
 
   cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
 
-  #create land cover palette
-  map_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
-
-  #plot observed vs modelled modal muni land cover
-  plot(cDat_map["ObsMode"], pal = map_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Observed Mode LC"), key.pos = NULL)
-  legend("bottomright", cex = 1.3, c("Nature", "Other Agri", "Agriculture", "Other", "Pasture"), fill = map_pal, bg = "white")
+  #filter to specified states (if needed)
+  if(!is.null(states)){
+    cDat_map <- filter(cDat_map, State %in% states) 
+  }
   
-  plot(cDat_map["ModMode"], pal = map_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LC"), key.pos = NULL)
-  legend("bottomright", cex = 1.3, c("Nature", "Other Agri", "Agriculture", "Other", "Pasture"), fill = map_pal, bg = "white")
-
+  #create layout (including legend at bottom)
+  m <- matrix(c(1,2),nrow = 2,ncol = 1,byrow = TRUE)
+  layout(mat = m,heights = c(0.9,0.1))
+    
+  #plot observed modal muni land cover
+  temp_pal <- lc_pal_function(cDat_map["ObsMode"])  #create land cover palette
+  plot(cDat_map["ObsMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Observed Mode LC"), key.pos = NULL, reset=F)
   
+  #add legend
+  par(mar=c(0,0,0,0))
+  plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+  legend(x = "center",inset = 0, lc_labs, fill = lc_pal, horiz = TRUE)
+    
+  
+  #plot modal modal muni land cover
+  temp_pal <- lc_pal_function(cDat_map["ModMode"])  #create land cover palette
+  plot(cDat_map["ModMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LC"), key.pos = NULL, reset=F)
+
+  #add legend
+  par(mar=c(0,0,0,0))
+  plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+  legend(x = "center",inset = 0, lc_labs, fill = lc_pal, horiz = TRUE)
+
+
   #map of muni mode correct/incorrect   
-  plot(cDat_map["diffcMode"], pal = c("darkgreen","red"), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Model vs Obs Mode Comparison"), key.pos = NULL)  
-  legend("bottomright", cex = 1.3, c("Correct", "Incorrect"), fill = c("darkgreen","red"), bg = "white")
+  plot(cDat_map["diffcMode"], pal = c("darkgreen","red"), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Model vs Obs Mode Comparison"), key.pos = NULL, reset=F)  
   
+  #add legend
+  par(mar=c(0,0,0,0))
+  plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+  legend(x = "center",inset = 0, c("Correct", "Incorrect"), fill = c("darkgreen","red"), horiz = TRUE)
+
   
   #get max value for colour breaks below
   errorMax <- max(filter(cDat, Year == yr)$cellDiffcCount)

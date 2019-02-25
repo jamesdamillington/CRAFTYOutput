@@ -55,7 +55,7 @@ BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
 
 #yr <- 2005   #for testing
 
-#create land cover palette
+#create default land cover palette
 lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
 lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
 
