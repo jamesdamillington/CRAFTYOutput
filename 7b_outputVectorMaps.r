@@ -25,13 +25,13 @@ library(gridExtra)
 library(animation)
 library(sf)
 library(viridisLite)
+library(RColorBrewer)  #for plotting
 
-
-sim_yrs <- seq(2000, 2015, 1)   #movie made for all these years
-fig_yrs <- c(2000, 2005, 2010, 2015) #figures output for only these years 
+sim_yrs <- seq(2001, 2015, 1)   #movie made for all these years
+fig_yrs <- c(2005, 2010, 2015) #figures output for only these years 
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-08-14c"
+scenario <- "Testing_2019-02-21"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -107,7 +107,32 @@ for(yr in sim_yrs){
       legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
 
     dev.off()
+  
+    #comparison maps of obs and mod proportions
+    png(paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_LUprops_",yr,".png"), width=1000, height=1000, res=100)
+    
+    cell_pal <- brewer.pal(7, "YlGn")
+    
+    m <- matrix(c(1,2,3,4,5,6,7,7),nrow = 4,ncol = 2,byrow = TRUE)
+    layout(mat = m,heights = c(0.3,0.3,0.3,0.1))
+  
+    plot(cDat_map["Obs1"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Obs Nature")
+    plot(cDat_map["Mod1"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Mod Nature")
+
+    plot(cDat_map["Obs3"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Obs Agri")
+    plot(cDat_map["Mod3"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Mod Agri")
+
+    plot(cDat_map["Obs5"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Obs Pasture")
+    plot(cDat_map["Mod5"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Mod Pasture")
+
+    par(mar=c(0,0,0,0))
+    plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+    legend(x = "center",inset = 0, legend=seq(0,1,0.2), fill=cell_pal, title=paste0(yr), horiz = TRUE)
+    
+    dev.off()
+
   }
+
 }
 
 #Now create LC video
