@@ -24,7 +24,7 @@ runID <- "0-0"
 states <- c(51) #MT
 
 
-#funciton to get correct LC pallete colours (e.g. if a given LC is missing) 
+#function to get correct LC pallete colours (e.g. if a given LC is missing) 
 lc_pal_function <- function(dat){
   
   pal <- c()

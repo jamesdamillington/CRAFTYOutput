@@ -4,7 +4,7 @@
 rm(list=ls())
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-08-23g"
+scenario <- "Testing_2019-02-21"
 runID <- "0-0"
 
 #script assumes there are three calibration years (2005, 2010, 2015); edit next line if that is not correct

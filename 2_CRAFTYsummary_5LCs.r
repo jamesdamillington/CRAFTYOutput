@@ -108,13 +108,13 @@ getFRs <- function(data)
 
 scenario <- "Testing_2019-02-21"
 runID <- "0-0"
-yrs <- seq(2001, 2002, 1)
+yrs <- seq(2001, 2015, 1)
 
 #yrs <- c(2005,2010,2015)
 
 #specify states to plot (for all states provide empty list)
-states <- c()  #all states
-#states <- c(51) #MT
+#states <- c()  #all states
+states <- c(51) #MT
 
 
 #output variables
