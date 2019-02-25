@@ -152,6 +152,7 @@ for(yr in sim_yrs){
   
     print(summary(cDat_map["Obs1"]))
     
+    
     #####
     #comparison maps of obs and mod proportions
     png(paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_LUprops_",yr,".png"), width=1000, height=1000, res=100)
@@ -189,16 +190,26 @@ if(video_output)
    
       cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
   
+      #filter to specified states (if needed)
+      if(!is.null(states)){
+        cDat_map <- filter(cDat_map, State %in% states) 
+      }
+   
+      #create layout (including legend at bottom)
       m <- matrix(c(1,2,3,3),nrow = 2,ncol = 2,byrow = TRUE)
       layout(mat = m,heights = c(0.8,0.2))
   
-      plot(cDat_map["ObsMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
-      plot(cDat_map["ModMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
-      
+      #add plots
+      for(nm in c("ObsMode", "ModMode")){
+        lc_pal_temp <- lc_pal_function(cDat_map[nm])
+        plot(cDat_map[nm], pal = lc_pal_temp, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
+      }
+  
+      #add legend
       par(mar=c(0,0,0,0))
       plot(1, type = "n", axes=FALSE, xlab="", ylab="")
       legend(x = "center",inset = 0, lc_labs, fill = lc_pal, title=paste0(yr), horiz = TRUE)
-  
+    
     },
     video.name = paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_LandUse_",scenario,".mp4"))
    
@@ -210,8 +221,16 @@ if(video_output)
    
       #create capital maps 
       scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+      
+      #filter to specified states (if needed)
+      if(!is.null(states)){
+        scDat_map <- filter(scDat_map, State %in% states) 
+      }
+
+      
       ps <- scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanLandPriceC,meanSoyProteC,meanGSeasonC)
    
+      #create layout
       m <- matrix(c(1,2,3,4,5,6,7,7,7),nrow = 3,ncol = 3,byrow = TRUE)
       layout(mat = m,heights = c(0.45,0.45,0.1))
   
@@ -221,12 +240,12 @@ if(video_output)
         plot(ps[psi], pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = T, lty = 0, key.pos=NULL, reset=F)
       }
   
-      #the legend is its own plot
+      #the legend is its own plot https://stackoverflow.com/a/10391001
       par(mar=c(0,0,0,0))
       plot(1, type = "n", axes=FALSE, xlab="", ylab="")
       legend(x = "center",inset = 0,
         legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
-   
+    
     },
     video.name = paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_Capitals_",scenario,".mp4"))
 }
