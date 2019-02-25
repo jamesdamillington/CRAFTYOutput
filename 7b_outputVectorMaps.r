@@ -48,7 +48,9 @@ video_output <- FALSE
 cDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisLC.csv"),
   col_types = cols(Year = col_integer(), diffcProp3 = col_double()))  #needed to ensure correct import (many zeros in diffcProp3 at top of file)
 
-scDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisServCap.csv"))
+scDat <- readr::read_csv(paste0("Data/",scenario,"/",runID,"/",scenario,"_CRAFTYmunisServCap.csv"),
+  col_types = cols(meanAgriC = col_double(), meanNatureC = col_double(), meanInfraC = col_double(),meanLandPriceC = col_double(),meanSoyProteC = col_double(),meanGSeasonC = col_double()))  #needed to ensure correct import 
+
 
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
@@ -76,6 +78,7 @@ lc_pal_function <- function(dat){
 #create capitals palette
 cap_pal <- viridis(100)
 brks <- seq(from=0,to=1,by=0.01)  #101 values
+
 
 #create proportions palette
 cell_pal <- brewer.pal(6, "YlGn")
@@ -117,6 +120,8 @@ for(yr in sim_yrs){
     #close png device
     dev.off()
 
+    
+    
     #######
     #now create capital maps 
     scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
@@ -141,7 +146,7 @@ for(yr in sim_yrs){
       par(mar = c(2,2,1,1))
       plot(ps[psi], pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = T, lty = 0, key.pos=NULL, reset=F)
     }
-
+    
     #the legend is its own plot https://stackoverflow.com/a/10391001
     par(mar=c(0,0,0,0))
     plot(1, type = "n", axes=FALSE, xlab="", ylab="")
@@ -149,8 +154,7 @@ for(yr in sim_yrs){
       legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
 
     dev.off()
-  
-    print(summary(cDat_map["Obs1"]))
+
     
     
     #####
@@ -168,7 +172,7 @@ for(yr in sim_yrs){
     
     #plot maps
     for(m in 1:length(propmaps)){
-      plot(cDat_map[propmaps[m]], pal = cell_pal, breaks = seq(0,1,0.2), graticule = st_crs(cDat_map), axes = TRUE, border="lightgrey", bg="white", key.pos=NULL, reset=F, main=proptitles[m])
+      plot(cDat_map[propmaps[m]], pal = cell_pal, breaks = seq(0,1,0.2), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main=proptitles[m])
     }
       
     #plot legend
