@@ -106,11 +106,15 @@ getFRs <- function(data)
 
 
 
-scenario <- "Testing_2018-07-31"
+scenario <- "Testing_2019-02-21"
 runID <- "0-0"
-yrs <- seq(2000, 2015, 1)
+yrs <- seq(2001, 2002, 1)
 
 #yrs <- c(2005,2010,2015)
+
+#specify states to plot (for all states provide empty list)
+states <- c()  #all states
+#states <- c(51) #MT
 
 
 #output variables
@@ -134,8 +138,16 @@ for(i in seq_along(yrs)){
   munis <- rename_all(munis, .funs = funs(substring(., 8)))  #string "region." prefix using substring function to retain only chars after 8 position (1 index) 
   #munis <- rename_all(munis, .funs = funs(sub("^region.", "",.)))  #or same as previos line using sub with regex
 
+  #create new column to indicate state (from first two digits of muniID)
+  munis <- mutate(munis, State = substring(muniID, 1, 2))
+  
   #join to add muniID to the CRAFTY output data
   output <- inner_join(output, munis, by = c("X", "Y"))
+  
+  ##subset to state if necessary
+  if(!is.null(states)){
+    output <- filter(output, State %in% states) 
+  }
   
   #***Services and Capitals
   #aggregate services and capitals to municipality 
