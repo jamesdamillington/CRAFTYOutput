@@ -35,6 +35,10 @@ scenario <- "Testing_2019-02-21"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
+#specify states to plot (for all states provide empty list)
+#states <- c()  #all states
+states <- c(51) #MT
+
 #outputs to create
 video_output <- FALSE
 
@@ -55,9 +59,26 @@ BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
 lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
 lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
 
+#funciton to get correct LC pallete colours (e.g. if a given LC is missing) 
+lc_pal_function <- function(dat){
+  
+  pal <- c()
+  
+  if(is.element(1,unlist(dat))) pal <- c(pal, "forestgreen")
+  if(is.element(2,unlist(dat))) pal <- c(pal, "darkcyan")
+  if(is.element(3,unlist(dat))) pal <- c(pal, "wheat2")
+  if(is.element(4,unlist(dat))) pal <- c(pal, "black")
+  if(is.element(5,unlist(dat))) pal <- c(pal, "orange2")
+
+  return(pal)
+}
+
 #create capitals palette
 cap_pal <- viridis(100)
 brks <- seq(from=0,to=1,by=0.01)  #101 values
+
+#create proportions palette
+cell_pal <- brewer.pal(6, "YlGn")
 
 #create figures
 for(yr in sim_yrs){
@@ -69,28 +90,49 @@ for(yr in sim_yrs){
     
     #land cover map first
     cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
-  
     
+    #filter to specified states (if needed)
+    if(!is.null(states)){
+      cDat_map <- filter(cDat_map, State %in% states) 
+    }
+    
+    #open png device
     png(paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_LandUse_",yr,".png"), width=1000, height=1000, res=100)
     
+    #create layout (including legend at bottom)
     m <- matrix(c(1,2,3,3),nrow = 2,ncol = 2,byrow = TRUE)
     layout(mat = m,heights = c(0.8,0.2))
 
-    plot(cDat_map["ObsMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
-    plot(cDat_map["ModMode"], pal = lc_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
-    
+    #add plots
+    for(nm in c("ObsMode", "ModMode")){
+      lc_pal_temp <- lc_pal_function(cDat_map[nm])
+      plot(cDat_map[nm], pal = lc_pal_temp, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F)
+    }
+
+    #add legend
     par(mar=c(0,0,0,0))
     plot(1, type = "n", axes=FALSE, xlab="", ylab="")
     legend(x = "center",inset = 0, lc_labs, fill = lc_pal, title=paste0(yr), horiz = TRUE)
     
+    #close png device
     dev.off()
 
+    #######
     #now create capital maps 
     scDat_map <- left_join(BRmunis, filter(scDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+    
+    #filter to specified states (if needed)
+    if(!is.null(states)){
+      scDat_map <- filter(scDat_map, State %in% states) 
+    }
+    
+    #select only Capitals we want
     ps <- scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanLandPriceC,meanSoyProteC,meanGSeasonC)
     
+    #open png device
     png(paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_Capitals_",yr,".png"), width=1200, height=1200, res=100)
     
+    #create layout
     m <- matrix(c(1,2,3,4,5,6,7,7,7),nrow = 3,ncol = 3,byrow = TRUE)
     layout(mat = m,heights = c(0.45,0.45,0.1))
 
@@ -108,23 +150,27 @@ for(yr in sim_yrs){
 
     dev.off()
   
+    print(summary(cDat_map["Obs1"]))
+    
+    #####
     #comparison maps of obs and mod proportions
     png(paste0("Data/",scenario,"/",runID,"/",scenario,"_MuniOutput_LUprops_",yr,".png"), width=1000, height=1000, res=100)
-    
-    cell_pal <- brewer.pal(7, "YlGn")
-    
+
+    #create layout
     m <- matrix(c(1,2,3,4,5,6,7,7),nrow = 4,ncol = 2,byrow = TRUE)
     layout(mat = m,heights = c(0.3,0.3,0.3,0.1))
   
-    plot(cDat_map["Obs1"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Obs Nature")
-    plot(cDat_map["Mod1"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Mod Nature")
-
-    plot(cDat_map["Obs3"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Obs Agri")
-    plot(cDat_map["Mod3"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Mod Agri")
-
-    plot(cDat_map["Obs5"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Obs Pasture")
-    plot(cDat_map["Mod5"], pal = cell_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, key.pos=NULL, reset=F, main="Mod Pasture")
-
+    #names columns to map
+    propmaps <- c("Obs1","Mod1","Obs3","Mod3","Obs5","Mod5")
+    #labels to use on map titles
+    proptitles <- c("Obs Nature","Mod Nature","Obs Agri","Mod Agri","Obs Pasture","Mod Pasture")
+    
+    #plot maps
+    for(m in 1:length(propmaps)){
+      plot(cDat_map[propmaps[m]], pal = cell_pal, breaks = seq(0,1,0.2), graticule = st_crs(cDat_map), axes = TRUE, border="lightgrey", bg="white", key.pos=NULL, reset=F, main=proptitles[m])
+    }
+      
+    #plot legend
     par(mar=c(0,0,0,0))
     plot(1, type = "n", axes=FALSE, xlab="", ylab="")
     legend(x = "center",inset = 0, legend=seq(0,1,0.2), fill=cell_pal, title=paste0(yr), horiz = TRUE)
