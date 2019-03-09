@@ -17,6 +17,7 @@ runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
 data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been saved
+region_filename <- "region.csv"
 
 #specify states to plot (for all states provide empty list)
 #states <- c()  #all states
@@ -255,7 +256,7 @@ SC_name <- paste0(data_dir,scenario,state_label,"_CRAFTYmunisServCap.csv")  #out
 LC_name <- paste0(data_dir,scenario,state_label,"_CRAFTYmunisLC.csv")  #output file name for land cover data 
 
 #load the region file (used to match each cell to a municipality)
-region <- read.csv(paste0(data_dir,"region.csv"))
+region <- read.csv(paste0(data_dir,region_filename))
 
 
 for(i in seq_along(yrs)){
