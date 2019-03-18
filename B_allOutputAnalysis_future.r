@@ -15,7 +15,7 @@
 
 rm(list=ls())
 
-scenario <- "ClimateRCP26_DemandConst2015"
+scenario <- "DemandAgriProj1absDP_ConstClim"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -764,8 +764,8 @@ for(yr in sim_yrs){
     png(paste0("Data/",scenario,"/",runID,"/",scenario,state_label,"_MuniOutput_LUprops_",yr,".png"), width=1000, height=1000, res=100)
 
     #create layout
-    m <- matrix(c(1,2,3,4),nrow = 4,ncol = 1,byrow = TRUE)
-    layout(mat = m,heights = c(0.3,0.3,0.3,0.1))
+    m <- matrix(c(1,2,3,4,4,4),nrow = 2,ncol = 3,byrow = TRUE)
+    layout(mat = m,heights = c(lcm(15),lcm(2)))
   
     #names columns to map
     propmaps <- c("Mod1","Mod3","Mod5")
