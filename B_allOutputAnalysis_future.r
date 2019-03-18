@@ -15,7 +15,7 @@
 
 rm(list=ls())
 
-scenario <- "DemandAgriProj2relDP_ConstClim"
+scenario <- "ClimateRCP26_DC_DemandConst2015"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -30,10 +30,9 @@ if(length(states) > 0){
   state_label = paste(c("_States", states), collapse = "-")
 } else{ state_label = "_States-All" }
 
-yrs <- seq(2015, 2020, 1)       #all years of analysis
-sim_yrs <- seq(2015, 2020, 1)   #movie made for all these years (will usually be identical to yrs above)
-#fig_yrs <- c(2020, 2025, 2030)  #figures output for only these years 
-fig_yrs <- c(2015, 2020)  #figures output for only these years 
+yrs <- seq(2015, 2030, 1)       #all years of analysis
+sim_yrs <- seq(2015, 2030, 1)   #movie made for all these years (will usually be identical to yrs above)
+fig_yrs <- c(2020, 2025, 2030)  #figures output for only these years 
 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
@@ -778,13 +777,16 @@ for(yr in sim_yrs){
     
     #plot maps
     for(m in 1:length(propmaps)){
-      plot(cDat_map[propmaps[m]], pal = cell_pal, breaks = seq(0,1,0.2), graticule = st_crs(cDat_map), axes = TRUE, lty=0, key.pos=NULL, reset=F, main=proptitles[m])
+      #plot(cDat_map[propmaps[m]], pal = cell_pal, breaks = seq(0,1,0.2), graticule = st_crs(cDat_map), axes = TRUE, lty=0, key.pos=NULL, reset=F, main=proptitles[m])
+      plot(cDat_map[propmaps[m]], pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty=0, key.pos=NULL, reset=F, main=proptitles[m])
     }
       
     #plot legend
     par(mar=c(0,0,0,0))
     plot(1, type = "n", axes=FALSE, xlab="", ylab="")
-    legend(x = "center",inset = 0, legend=seq(0,1,0.2), fill=cell_pal, title=paste0(yr), horiz = TRUE)
+    #legend(x = "center",inset = 0, legend=seq(0,1,0.2), fill=cell_pal, title=paste0(yr), horiz = TRUE)
+    legend(x = "center",inset = 0,
+      legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
     
     dev.off()
 
@@ -861,6 +863,13 @@ if(video_output)
     saveVideo(
       for(yr in sim_yrs){
    
+       cDat_map <- left_join(BRmunis, filter(cDat, Year == yr), by = c("CD_GEOCMUn" ="muniID")) 
+    
+        #filter to specified states (if needed)
+        if(!is.null(states)){
+          cDat_map <- filter(cDat_map, State %in% states) 
+        }
+   
         #create layout
         m <- matrix(c(1,2,3,4,4,4),nrow = 2,ncol = 3,byrow = TRUE)
         layout(mat = m,heights = c(0.8,0.2))
@@ -873,14 +882,16 @@ if(video_output)
         
         #plot maps
         for(m in 1:length(propmaps)){
-          plot(cDat_map[propmaps[m]], pal = cell_pal, breaks = seq(0,1,0.2), graticule = st_crs(cDat_map), axes = TRUE, lty=0, key.pos=NULL, reset=F, main=proptitles[m])
+          #plot(cDat_map[propmaps[m]], pal = cell_pal, breaks = seq(0,1,0.2), graticule = st_crs(cDat_map), axes = TRUE, lty=0, key.pos=NULL, reset=F, main=proptitles[m])
+          plot(cDat_map[propmaps[m]], pal = cap_pal, breaks = brks, graticule = st_crs(cDat_map), axes = TRUE, lty=0, key.pos=NULL, reset=F, main=proptitles[m])
         }
-          
+      
         #plot legend
         par(mar=c(0,0,0,0))
         plot(1, type = "n", axes=FALSE, xlab="", ylab="")
-        legend(x = "center",inset = 0, legend=seq(0,1,0.2), fill=cell_pal, title=paste0(yr), horiz = TRUE)
-
+        #legend(x = "center",inset = 0, legend=seq(0,1,0.2), fill=cell_pal, title=paste0(yr), horiz = TRUE)
+        legend(x = "center",inset = 0,
+          legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
   
     },
     video.name = paste0(data_dir,scenario,state_label,"_MuniOutput_LUprops_",scenario,state_label,".mp4"))
