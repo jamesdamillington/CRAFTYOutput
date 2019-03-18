@@ -15,7 +15,7 @@
 
 rm(list=ls())
 
-scenario <- "DemandAgriProj1absDP_ConstClim"
+scenario <- "DemandAgriProj2relDP_ConstClim"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -23,20 +23,22 @@ data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been
 region_filename <- "region2015.csv"
 
 #specify states to plot (for all states provide empty list)
-states <- c()  #all states
-#states <- c(51) #MT
+#states <- c()  #all states
+states <- c(51) #MT
 
 if(length(states) > 0){
   state_label = paste(c("_States", states), collapse = "-")
 } else{ state_label = "_States-All" }
 
-yrs <- seq(2015, 2030, 1)       #all years of analysis
-sim_yrs <- seq(2015, 2030, 1)   #movie made for all these years (will usually be identical to yrs above)
-fig_yrs <- c(2020, 2025, 2030)  #figures output for only these years 
+yrs <- seq(2015, 2020, 1)       #all years of analysis
+sim_yrs <- seq(2015, 2020, 1)   #movie made for all these years (will usually be identical to yrs above)
+#fig_yrs <- c(2020, 2025, 2030)  #figures output for only these years 
+fig_yrs <- c(2015, 2020)  #figures output for only these years 
+
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
-video_output <- FALSE
+video_output <- TRUE
 comp_matrices <- TRUE
 
 
@@ -712,6 +714,7 @@ for(yr in sim_yrs){
     m <- matrix(c(1,2),nrow = 2,ncol = 1,byrow = TRUE)
     layout(mat = m,heights = c(0.9,0.1))
     
+    
     #plot modal modal muni land cover
     temp_pal <- lc_pal_function(cDat_map["ModMode"])  #create land cover palette
     plot(cDat_map["ModMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LC"), key.pos = NULL, reset=F)
@@ -765,6 +768,7 @@ for(yr in sim_yrs){
 
     #create layout
     m <- matrix(c(1,2,3,4,4,4),nrow = 2,ncol = 3,byrow = TRUE)
+    #layout(mat = m,heights = c(0.9,0.1))
     layout(mat = m,heights = c(lcm(15),lcm(2)))
   
     #names columns to map
@@ -852,6 +856,34 @@ if(video_output)
   
     },
     video.name = paste0(data_dir,scenario,state_label,"_MuniOutput_Capitals_",scenario,state_label,".mp4"))
+
+    #proportions video
+    saveVideo(
+      for(yr in sim_yrs){
+   
+        #create layout
+        m <- matrix(c(1,2,3,4,4,4),nrow = 2,ncol = 3,byrow = TRUE)
+        layout(mat = m,heights = c(0.8,0.2))
+        #layout(mat = m,heights = c(lcm(15),lcm(2)))
+      
+        #names columns to map
+        propmaps <- c("Mod1","Mod3","Mod5")
+        #labels to use on map titles
+        proptitles <- c("Mod Nature","Mod Agri","Mod Pasture")
+        
+        #plot maps
+        for(m in 1:length(propmaps)){
+          plot(cDat_map[propmaps[m]], pal = cell_pal, breaks = seq(0,1,0.2), graticule = st_crs(cDat_map), axes = TRUE, lty=0, key.pos=NULL, reset=F, main=proptitles[m])
+        }
+          
+        #plot legend
+        par(mar=c(0,0,0,0))
+        plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+        legend(x = "center",inset = 0, legend=seq(0,1,0.2), fill=cell_pal, title=paste0(yr), horiz = TRUE)
+
+  
+    },
+    video.name = paste0(data_dir,scenario,state_label,"_MuniOutput_LUprops_",scenario,state_label,".mp4"))
 
 }
 
