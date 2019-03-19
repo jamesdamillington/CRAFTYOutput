@@ -30,14 +30,14 @@ if(length(states) > 0){
   state_label = paste(c("_States", states), collapse = "-")
 } else{ state_label = "_States-All" }
 
-yrs <- seq(2015, 2030, 1)       #all years of analysis
-sim_yrs <- seq(2015, 2030, 1)   #movie made for all these years (will usually be identical to yrs above)
-fig_yrs <- c(2020, 2025, 2030)  #figures output for only these years 
-
+yrs <- seq(2015, 2017, 1)       #all years of analysis
+sim_yrs <- seq(2015, 2017, 1)   #movie made for all these years (will usually be identical to yrs above)
+#fig_yrs <- c(2020, 2025, 2030)  #figures output for only these years 
+fig_yrs <- c(2015, 2016, 2017)  #figures output for only these years 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
-video_output <- TRUE
+video_output <- FALSE
 comp_matrices <- TRUE
 
 
@@ -612,15 +612,19 @@ for(i in seq_along(sim_yrs)){
   print("marrange")
   
   mps[[i]] <- marrangeGrob(pl, nrow = 3, ncol = 3, top = paste0(sim_yrs[i]))
-  #lus[[i]] <- marrangeGrob(lul, nrow = 1, ncol = 2, top = paste0(sim_yrs[i]))
+
+  #now create LU map with AgriCap map
+  lul[[1]] <- ModLUmap
+  lul[[2]] <- pl[[2]] #this should be the AgriCap map
   
-  #lus[[i]] <- LUmap
+  lus[[i]] <- marrangeGrob(lul, nrow = 1, ncol = 2, top = paste0(sim_yrs[i]))
+  
   
   #if we want this year saved as an image 
   if(sim_yrs[i] %in% fig_yrs) {
-  ggsave(paste0(data_dir,scenario,state_label,"_RasterOutput_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
-
-  #ggsave(paste0(data_dir,scenario,state_label,"_RasterOutput_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
+  
+    ggsave(paste0(data_dir,scenario,state_label,"_RasterOutput_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
+    ggsave(paste0(data_dir,scenario,state_label,"_RasterOutput_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
   }
     
 }
