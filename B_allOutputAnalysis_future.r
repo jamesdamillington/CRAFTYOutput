@@ -15,7 +15,7 @@
 
 rm(list=ls())
 
-scenario <- "ClimateRCP26_DC_DemandConst2015"
+scenario <- "ClimateRCP45-50_DC_DemandConst2015"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -30,14 +30,14 @@ if(length(states) > 0){
   state_label = paste(c("_States", states), collapse = "-")
 } else{ state_label = "_States-All" }
 
-yrs <- seq(2015, 2017, 1)       #all years of analysis
-sim_yrs <- seq(2015, 2017, 1)   #movie made for all these years (will usually be identical to yrs above)
-#fig_yrs <- c(2020, 2025, 2030)  #figures output for only these years 
+yrs <- seq(2015, 2030, 1)       #all years of analysis
+sim_yrs <- seq(2015, 2030, 1)   #movie made for all these years (will usually be identical to yrs above)
+#fig_yrs <- c(2020, 2025, 2030, 2035, 2040, 2045, 2050)  #figures output for only these years 
 fig_yrs <- c(2015, 2016, 2017)  #figures output for only these years 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
-video_output <- FALSE
+video_output <- TRUE
 comp_matrices <- TRUE
 
 
@@ -203,6 +203,37 @@ makeModLUmap <- function(LU, year) {
 
   return(LUmap)
   
+}
+
+
+clipStates <- function(inRaster, statemap, states_ls)
+{
+  print("clipStates")
+
+    #substitute values so that only specified states have data
+    #first create the data frame
+    mdf <- data.frame()
+    for(m in seq_along(states_ls)) {
+      if(m == 1) { 
+        mdf <- data.frame(a=states_ls[m], b=1) 
+      }  else  {  
+        mdf <- rbind(mdf, c(states_ls[m], 1))  
+      }
+    }
+    #now subs in the statemap 
+    statemap <- subs(x=statemap, y=mdf, by=1, which=2, subsWithNA=T)
+    
+    #trim so that statemap is extent of masked data
+    smaskmap <- trim(statemap)
+    
+    #crop pl stack to extent of crop map 
+    inRaster <- crop(inRaster, smaskmap)
+    
+    #mask to extent of desired states
+    inRaster <- mask(inRaster, smaskmap)
+
+    return(inRaster)
+    
 }
 
 #####
@@ -555,6 +586,10 @@ for(i in seq_along(sim_yrs)){
   
   print(paste0("raster maps: ", sim_yrs[i]))
 
+  #create state raster map from region file data (in case needed for state output below)
+  muniRas <- outputRaster(region, "muniID")
+  stateRas <- muniRas %/% 100000   #truncate muniID
+  
   #Load model output data
   output <- read_csv(paste0(data_dir,scenario,"-",runID,"-Cell-",sim_yrs[i],".csv"))
   
@@ -577,6 +612,10 @@ for(i in seq_along(sim_yrs)){
   pl <- list()  #this will hold the plots for the all map for this year
   lul <- list()  #this will hold the plots for the LU map for this year
   
+  #mask if specific states are desired
+  if(!is.null(states)){
+    LU<- clipStates(LU, stateRas, states) }
+    
   #create the Modelled LU plot and add to the list
   ModLUmap <- makeModLUmap(LU, sim_yrs[i])
   pl[[1]] <- ModLUmap
@@ -594,6 +633,13 @@ for(i in seq_along(sim_yrs)){
   
   rl <- list(Agri, Nat, Infra, OAg, Aces, Lprice, Spro, GrowS)
   rl_names <- c("Agriculture C", "Nature C", "Port Access C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
+  
+  #mask the maps if specific states are desired
+  if(!is.null(states)){
+    for(r in seq_along(rl)) {
+      rl[[r]] <- clipStates(rl[[r]], stateRas, states)
+    }
+  }
   
   for(j in seq_along(rl)){
     
@@ -616,7 +662,7 @@ for(i in seq_along(sim_yrs)){
   #now create LU map with AgriCap map
   lul[[1]] <- ModLUmap
   lul[[2]] <- pl[[2]] #this should be the AgriCap map
-  
+
   lus[[i]] <- marrangeGrob(lul, nrow = 1, ncol = 2, top = paste0(sim_yrs[i]))
   
   
@@ -628,6 +674,7 @@ for(i in seq_along(sim_yrs)){
   }
     
 }
+
 
 if(comp_matrices)
 {
@@ -672,7 +719,7 @@ if(video_output)
     for(i in seq_along(mps)){
       print(mps[[i]])
     },
-    video.name = paste0(data_dir,scenario,state_label,"_RasterOutput_Capitals_",scenario,state_label,".mp4"))
+    video.name = paste0(data_dir,scenario,state_label,"_RasterOutput_Capitals.mp4"))
 }
 
 
@@ -825,7 +872,7 @@ if(video_output)
       legend(x = "center",inset = 0, lc_labs, fill = lc_pal, horiz = TRUE)
        
     },
-    video.name = paste0(data_dir,scenario,state_label,"_MuniOutput_LandUse_",scenario,state_label,".mp4"))
+    video.name = paste0(data_dir,scenario,state_label,"_MuniOutput_LandUse.mp4"))
    
 
   
@@ -861,7 +908,7 @@ if(video_output)
         legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
   
     },
-    video.name = paste0(data_dir,scenario,state_label,"_MuniOutput_Capitals_",scenario,state_label,".mp4"))
+    video.name = paste0(data_dir,scenario,state_label,"_MuniOutput_Capitals.mp4"))
 
     #proportions video
     saveVideo(
@@ -898,7 +945,7 @@ if(video_output)
           legend=seq(1,0,-0.1), fill=rev(viridis(11)), title=paste0(yr), horiz = TRUE)
   
     },
-    video.name = paste0(data_dir,scenario,state_label,"_MuniOutput_LUprops_",scenario,state_label,".mp4"))
+    video.name = paste0(data_dir,scenario,state_label,"_MuniOutput_LUprops.mp4"))
 
 }
 
