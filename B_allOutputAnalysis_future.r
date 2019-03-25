@@ -328,8 +328,7 @@ for(i in seq_along(yrs)){
 #   "FR123" = "Mod3", 
 #   "FR7" = "Mod4",
 #   "FR8" = "Mod5",
-   "NonNAs" = "cellCount",
-   "NAs" = "NAcellCount"))
+   "NonNAs" = "cellCount"))
 
 #code to add modal cell lc for each muncipality for modelled and observed LC
 #mMode and oMode are characters  (the names of the column with greatest proportion)
@@ -376,8 +375,8 @@ cDat <- readr::read_csv(LC_name,
 
 
 #create colours for plot
-myCols <- c("coral2","dodgerblue2","darkorchid2","forestgreen","wheat2","orange2")
-names(myCols) <- c("Soy", "Maize", "DoubleC",'Nature',"OtherAgri","Pasture")
+myCols <- c("coral2","dodgerblue2","darkorchid2","forestgreen","wheat2","black","orange2")
+names(myCols) <- c("Soy", "Maize", "DoubleC",'Nature',"OtherAgri","Other","Pasture")
 
 
 #add state ID
@@ -398,21 +397,21 @@ cDat <- cDat %>%
 
 #timeseries plots
 cDat <- cDat %>%
-  mutate(Soy.Mod = round(FR1 * cellCount,0)) %>%
-  mutate(Mze.Mod = round(FR2 * cellCount,0)) %>%
-  mutate(DC.Mod = round(FR3 * cellCount,0)) %>%
-  mutate(Nat.Mod = round(FR45 * cellCount,0)) %>%
-  mutate(OAgri.Mod = round(FR6 * cellCount,0)) %>%
-  mutate(Other.Mod = round(FR7 * cellCount,0)) %>%
-  mutate(Pas.Mod = round(FR8 * cellCount,0)) #%>%
+  mutate(Soy.Mod = round(FR1 * cellCount * 2500,0)) %>%
+  mutate(Mze.Mod = round(FR2 * cellCount * 2500,0)) %>%
+  mutate(DC.Mod = round(FR3 * cellCount * 2500,0)) %>%
+  mutate(Nat.Mod = round(FR45 * cellCount * 2500,0)) %>%
+  mutate(OAgri.Mod = round(FR6 * cellCount * 2500,0)) %>%
+  mutate(Other.Mod = round(FR7 * cellCount * 2500,0)) %>%
+  mutate(Pas.Mod = round(FR8 * cellCount * 2500,0)) #%>%
 
 
 #long version
 cDat_long_mod <- cDat %>%
   dplyr::select(Year, state:Pas.Mod) %>%
-  gather(key = LC, value = cells, -Year, -state) %>% 
+  gather(key = LC, value = hectares, -Year, -state) %>% 
   group_by(Year,LC) %>%
-  summarise_at(vars(matches("cells")),sum) %>%
+  summarise_at(vars(matches("hectares")),sum) %>%
   mutate(source = "Mod")
 
 
@@ -435,11 +434,11 @@ cDat_long_mod <- cDat_long_mod %>%
     
 
 c <- cDat_long_mod %>% 
-  ggplot(aes(x = Year, y = cells,color = LC, linetype = source)) + 
+  ggplot(aes(x = Year, y = hectares,color = LC, linetype = source)) + 
   geom_line(size = 1) +
   scale_colour_manual(name = "LC",values = myCols) +
-  scale_y_continuous(name = "Cells", labels = scales::comma) +
-  ggtitle("CRAFTY Output")
+  scale_y_continuous(name = "Hectares", labels = scales::comma) +
+  ggtitle(scenario)
 print(c)
 
 
