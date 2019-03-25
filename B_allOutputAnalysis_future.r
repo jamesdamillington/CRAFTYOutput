@@ -15,7 +15,7 @@
 
 rm(list=ls())
 
-scenario <- "ClimateRCP45-50_DC_DemandConst2015"
+scenario <- "ClimateRCP26_DC_DemandConst2015"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -23,21 +23,22 @@ data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been
 region_filename <- "region2015.csv"
 
 #specify states to plot (for all states provide empty list)
-#states <- c()  #all states
-states <- c(51) #MT
+states <- c()  #all states
+#states <- c(51) #MT
 
 if(length(states) > 0){
   state_label = paste(c("_States", states), collapse = "-")
 } else{ state_label = "_States-All" }
 
-yrs <- seq(2015, 2030, 1)       #all years of analysis
-sim_yrs <- seq(2015, 2030, 1)   #movie made for all these years (will usually be identical to yrs above)
-#fig_yrs <- c(2020, 2025, 2030, 2035, 2040, 2045, 2050)  #figures output for only these years 
+yrs <- seq(2015, 2017, 1)       #all years of analysis
+sim_yrs <- seq(2015, 2017, 1)   #movie made for all these years (will usually be identical to yrs above)
+#fig_yrs <- c(2020, 2025, 2030)  #figures output for only these years 
 fig_yrs <- c(2015, 2016, 2017)  #figures output for only these years 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
-video_output <- TRUE
+ras_video_output <- TRUE
+muni_video_output <- FALSE
 comp_matrices <- TRUE
 
 
@@ -173,13 +174,13 @@ makeModLUmap <- function(LU, year) {
     LUcols <- c(LUcols, 'deeppink')}
   if(0 %in% uLU) { 
     labs <- c(labs, "Soy") 
-    LUcols <- c(LUcols, 'wheat1')}
+    LUcols <- c(LUcols, 'coral2')}
   if(1 %in% uLU) { 
     labs <- c(labs, "Mze") 
-    LUcols <- c(LUcols, 'wheat2')}
+    LUcols <- c(LUcols, 'dodgerblue2')}
   if(2 %in% uLU) { 
     labs <- c(labs, "DblC") 
-    LUcols <- c(LUcols, 'wheat3')}
+    LUcols <- c(LUcols, 'darkorchid2')}
   if(3 %in% uLU) { 
     labs <- c(labs, "SNat") 
     LUcols <- c(LUcols, 'darkgreen')}
@@ -188,7 +189,7 @@ makeModLUmap <- function(LU, year) {
     LUcols <- c(LUcols, 'forestgreen')}
   if(5 %in% uLU) { 
     labs <- c(labs, "OAg") 
-    LUcols <- c(LUcols, 'darkcyan')}
+    LUcols <- c(LUcols, 'wheat2')}
   if(6 %in% uLU) { 
     labs <- c(labs, "O") 
     LUcols <- c(LUcols, 'black')}
@@ -208,8 +209,6 @@ makeModLUmap <- function(LU, year) {
 
 clipStates <- function(inRaster, statemap, states_ls)
 {
-  print("clipStates")
-
     #substitute values so that only specified states have data
     #first create the data frame
     mdf <- data.frame()
@@ -669,8 +668,8 @@ for(i in seq_along(sim_yrs)){
   #if we want this year saved as an image 
   if(sim_yrs[i] %in% fig_yrs) {
   
-    ggsave(paste0(data_dir,scenario,state_label,"_RasterOutput_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
-    ggsave(paste0(data_dir,scenario,state_label,"_RasterOutput_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
+    ggsave(paste0(data_dir,scenario,state_label,"_Raster_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
+    ggsave(paste0(data_dir,scenario,state_label,"_Raster_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
   }
     
 }
@@ -706,20 +705,20 @@ if(comp_matrices)
 }
 
 
-if(video_output)
+if(ras_video_output)
 {
-  #make videos here by looping through list
-  #saveVideo(
-  #  for(i in seq_along(lus)){
-  #    print(lus[[i]])
-  #  },
-  #  video.name = paste0(data_dir,scenario,state_label,"_RasterOutput_LandUse_",scenario,state_label,".mp4"))
-    
   saveVideo(
     for(i in seq_along(mps)){
       print(mps[[i]])
     },
-    video.name = paste0(data_dir,scenario,state_label,"_RasterOutput_Capitals.mp4"))
+    video.name = paste0(data_dir,scenario,state_label,"_Raster_Capitals.mp4"))
+  
+  saveVideo(
+    for(i in seq_along(lus)){
+      print(lus[[i]])
+    },
+    video.name = paste0(data_dir,scenario,state_label,"_Raster_LandUse.mp4"))
+  
 }
 
 
@@ -845,7 +844,7 @@ for(yr in sim_yrs){
 }
 
 
-if(video_output)
+if(muni_video_output)
 {
   #Now create LC video
   saveVideo(
