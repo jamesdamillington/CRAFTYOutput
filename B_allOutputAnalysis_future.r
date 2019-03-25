@@ -303,7 +303,7 @@ for(i in seq_along(yrs)){
   #5. PAsture (FR8)
 
   #subset to get only the FR combos that indicate a specific land cover for municipalities
-  selectedFRs <- c("muniID","FR123", "FR45", "FR6", "FR7", "FR8") #JM! check this works
+  selectedFRs <- c("muniID","FR1", "FR2", "FR3", "FR45", "FR6", "FR7", "FR8") #JM! check this works
   mapFRs <- dplyr::select(FRs, selectedFRs)
   
   #join mapbiomas (lc) and CRAFTY output (mapFRs) summary tables together
@@ -317,50 +317,33 @@ for(i in seq_along(yrs)){
 }
 
 #rename columns using legend above (plus others
-lcDat <- plyr::rename(lcDat, c(
-  "LC1" = "Obs1",
-  "LC2" = "Obs2",
-  "LC3" = "Obs3",
-  "LC4" = "Obs4",
-  "LC5" = "Obs5",
-  "FR45" = "Mod1", 
-  "FR6" = "Mod2", 
-  "FR123" = "Mod3", 
-  "FR7" = "Mod4",
-  "FR8" = "Mod5",
-  "NonNAs" = "cellCount",
-  "NAs" = "NAcellCount"))
+ lcDat <- plyr::rename(lcDat, c(
+#   "LC1" = "Obs1",
+#   "LC2" = "Obs2",
+#   "LC3" = "Obs3",
+#   "LC4" = "Obs4",
+#   "LC5" = "Obs5",
+#   "FR45" = "Mod1", 
+#   "FR6" = "Mod2", 
+#   "FR123" = "Mod3", 
+#   "FR7" = "Mod4",
+#   "FR8" = "Mod5",
+   "NonNAs" = "cellCount",
+   "NAs" = "NAcellCount"))
 
 #code to add modal cell lc for each muncipality for modelled and observed LC
 #mMode and oMode are characters  (the names of the column with greatest proportion)
-lcDat <- mutate(lcDat, mM = names(lcDat)[max.col(lcDat[2:6])+1L])  #from https://stackoverflow.com/a/37197584
+lcDat <- mutate(lcDat, mM = names(lcDat)[max.col(lcDat[2:8])+1L])  #from https://stackoverflow.com/a/37197584
 #lcDat <- mutate(lcDat, oM = names(lcDat)[max.col(lcDat[7:11])+6L])  #edit 6L to get to right columns
 
 #remove letters from start of mM and oM (returning as integer)
-lcDat <- mutate(lcDat, ModMode = as.integer(substring(mM, 4)))
+lcDat <- mutate(lcDat, ModMode = as.integer(substring(mM, 3)))
 #lcDat <- mutate(lcDat, ObsMode = as.integer(substring(oM, 4)))
 
 #drop column that had letters in
 lcDat <- lcDat %>%
-  dplyr::select(-c(mM,oM))
+  dplyr::select(-c(mM))
 
-#comparison of modelled mode vs observed mode (TRUE/FALSE)
-#lcDat <- lcDat[!is.na(lcDat$ObsMode),]
-#lcDat$diffcMode <- lcDat$ModMode != lcDat$ObsMode
-
-#calc total prop incorrectly predicted cells (in cells; need to chack ths against Pontius papers)
-#cannot use sum as that sums entire variable
-#lcDat <- lcDat %>%
-#  mutate(cellDiffcCount = round(cellCount*(abs(Mod1-Obs1) + abs(Mod2-Obs2) + abs(Mod3-Obs3) + abs(Mod4-Obs4) + abs(Mod5-Obs5)))/2) %>%
-#  mutate(cellDiffcProp = round(cellDiffcCount/cellCount,3))
-
-#calc difference in proportion for each LC between Modelled and Observed
-#lcDat <- lcDat %>%
-#  mutate(diffcProp1 = round(Mod1 - Obs1, digits = 3)) %>%
-#  mutate(diffcProp2 = round(Mod2 - Obs2, digits = 3)) %>%
-#  mutate(diffcProp3 = round(Mod3 - Obs3, digits = 3)) %>%
-#  mutate(diffcProp4 = round(Mod4 - Obs4, digits = 3)) %>%
-#  mutate(diffcProp5 = round(Mod5 - Obs5, digits = 3))
 
 #ensure Year is written as integer (see https://github.com/tidyverse/readr/issues/645)
 lcDat <- lcDat %>%
@@ -381,7 +364,7 @@ if(pdfprint) {
 }
 
 cDat <- readr::read_csv(LC_name,
-  col_types = cols(Year = col_integer(), diffcProp3 = col_double())) #needed to ensure correct import (many zeros in diffcProp3 at top of file)
+  col_types = cols(Year = col_integer())) #needed to ensure correct import (many zeros in diffcProp3 at top of file)
 
 ## Mode analysis
 
@@ -393,8 +376,8 @@ cDat <- readr::read_csv(LC_name,
 
 
 #create colours for plot
-myCols <- c("forestgreen","darkcyan","wheat3","black","orange2")
-names(myCols) <- c('Nature',"OtherAgri","Agri","Other","Pasture")
+myCols <- c("coral2","dodgerblue2","darkorchid2","forestgreen","wheat2","orange2")
+names(myCols) <- c("Soy", "Maize", "DoubleC",'Nature',"OtherAgri","Pasture")
 
 
 #add state ID
@@ -415,16 +398,14 @@ cDat <- cDat %>%
 
 #timeseries plots
 cDat <- cDat %>%
-      mutate(Nat.Mod = round(Mod1 * cellCount,0)) %>%
-      mutate(OAgri.Mod = round(Mod2 * cellCount,0)) %>%
-      mutate(Agri.Mod = round(Mod3 * cellCount,0)) %>%
-      mutate(Other.Mod = round(Mod4 * cellCount,0)) %>%
-      mutate(Pas.Mod = round(Mod5 * cellCount,0)) #%>%
-#      mutate(Nat.Obs = round(Obs1 * cellCount,0)) %>%
-#      mutate(OAgri.Obs = round(Obs2 * cellCount,0)) %>%
-#      mutate(Agri.Obs = round(Obs3 * cellCount,0)) %>%
-#      mutate(Other.Obs = round(Obs4 * cellCount,0)) %>%
-#      mutate(Pas.Obs = round(Obs5 * cellCount,0))
+  mutate(Soy.Mod = round(FR1 * cellCount,0)) %>%
+  mutate(Mze.Mod = round(FR2 * cellCount,0)) %>%
+  mutate(DC.Mod = round(FR3 * cellCount,0)) %>%
+  mutate(Nat.Mod = round(FR45 * cellCount,0)) %>%
+  mutate(OAgri.Mod = round(FR6 * cellCount,0)) %>%
+  mutate(Other.Mod = round(FR7 * cellCount,0)) %>%
+  mutate(Pas.Mod = round(FR8 * cellCount,0)) #%>%
+
 
 #long version
 cDat_long_mod <- cDat %>%
@@ -434,22 +415,23 @@ cDat_long_mod <- cDat %>%
   summarise_at(vars(matches("cells")),sum) %>%
   mutate(source = "Mod")
 
-#cDat_long_obs<- cDat %>%
-#  dplyr::select(Year, state, Nat.Obs:Pas.Obs) %>%
-#  gather(key = LC, value = cells, -Year, -state) %>% 
-#  group_by(Year,LC) %>%
-#  summarise_at(vars(matches("cells")),sum) %>%
-#  mutate(source = "Obs")
-
-#cDat_long <- bind_rows(cDat_long_mod, cDat_long_obs)
 
 cDat_long_mod <- cDat_long_mod %>%
   mutate(LC = 
-    if_else(LC == "Nat.Mod", "Nature",
-    if_else(LC == "OAgri.Mod", "OtherAgri",
-    if_else(LC == "Agri.Mod", "Agri",
-    if_else(LC == "Other.Mod", "Other",
-      "Pasture")))))
+      if_else(LC == "Soy.Mod", "Soy",
+        if_else(LC == "Mze.Mod", "Maize",
+          if_else(LC == "DC.Mod", "DoubleC",
+            if_else(LC == "Nat.Mod", "Nature",
+              if_else(LC == "OAgri.Mod", "OtherAgri",
+                if_else(LC == "Other.Mod", "Other",
+                  "Pasture"
+                )
+              )
+            )
+          )
+        )
+      )
+    )
     
 
 c <- cDat_long_mod %>% 
@@ -474,22 +456,24 @@ lc_pal_function <- function(dat){
   
   pal <- c()
   
-  if(is.element(1,unlist(dat))) pal <- c(pal, "forestgreen")
-  if(is.element(2,unlist(dat))) pal <- c(pal, "darkcyan")
-  if(is.element(3,unlist(dat))) pal <- c(pal, "wheat2")
-  if(is.element(4,unlist(dat))) pal <- c(pal, "black")
-  if(is.element(5,unlist(dat))) pal <- c(pal, "orange2")
+  if(is.element(1,unlist(dat))) pal <- c(pal, "coral2")
+  if(is.element(2,unlist(dat))) pal <- c(pal, "dodgerblue2")
+  if(is.element(3,unlist(dat))) pal <- c(pal, "darkorchid2")
+  if(is.element(6,unlist(dat))) pal <- c(pal, "wheat2")
+  if(is.element(7,unlist(dat))) pal <- c(pal, "black")
+  if(is.element(8,unlist(dat))) pal <- c(pal, "orange2")
+  if(is.element(45,unlist(dat))) pal <- c(pal, "forestgreen")
 
   return(pal)
 }
 
 #create default land cover palette
-lc_pal <- c("forestgreen", "darkcyan", "wheat2", "black", "orange2")
-lc_labs <- c("Nature", "Other Agri", "Agriculture", "Other", "Pasture")
+lc_pal <- c("coral2","dodgerblue2","darkorchid2","forestgreen", "wheat2", "black", "orange2")
+lc_labs <- c("Soy","Maize","DoubleC","Nature", "Other Agri", "Other", "Pasture")
 
 
 cDat <- readr::read_csv(LC_name,
-  col_types = cols(Year = col_integer(), diffcProp3 = col_double())) #needed to ensure correct import (many zeros in diffcProp3 at top of file)
+  col_types = cols(Year = col_integer())) #needed to ensure correct import (many zeros in diffcProp3 at top of file)
 
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
@@ -514,16 +498,7 @@ for(yr in fig_yrs){
   m <- matrix(c(1,2),nrow = 2,ncol = 1,byrow = TRUE)
   layout(mat = m,heights = c(0.9,0.1))
     
-  #plot observed modal muni land cover
-  #temp_pal <- lc_pal_function(cDat_map["ObsMode"])  #create land cover palette
-  #plot(cDat_map["ObsMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Observed Mode LC"), key.pos = NULL, reset=F)
-  
-  #add legend
-  #par(mar=c(0,0,0,0))
-  #plot(1, type = "n", axes=FALSE, xlab="", ylab="")
-  #legend(x = "center",inset = 0, lc_labs, fill = lc_pal, horiz = TRUE)
-    
-  
+
   #plot modal modal muni land cover
   temp_pal <- lc_pal_function(cDat_map["ModMode"])  #create land cover palette
   plot(cDat_map["ModMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LC"), key.pos = NULL, reset=F)
@@ -532,40 +507,6 @@ for(yr in fig_yrs){
   par(mar=c(0,0,0,0))
   plot(1, type = "n", axes=FALSE, xlab="", ylab="")
   legend(x = "center",inset = 0, lc_labs, fill = lc_pal, horiz = TRUE)
-
-
-  #map of muni mode correct/incorrect   
-  #plot(cDat_map["diffcMode"], pal = c("darkgreen","red"), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Model vs Obs Mode Comparison"), key.pos = NULL, reset=F)  
-  
-  #add legend
-  #par(mar=c(0,0,0,0))
-  #plot(1, type = "n", axes=FALSE, xlab="", ylab="")
-  #legend(x = "center",inset = 0, c("Correct", "Incorrect"), fill = c("darkgreen","red"), horiz = TRUE)
-
-  
-  #get max value for colour breaks below
-  #errorMax <- max(filter(cDat, Year == yr)$cellDiffcCount)
-
-  #for cell accuracy maps
-  #cell_pal <- brewer.pal(8, "Reds")
-
-  #total count of cells incorrect
-  #plot(cDat_map["cellDiffcCount"], pal = cell_pal, breaks = seq(0,errorMax, length.out = length(cell_pal)+1), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Count Incorrect Cells"))
-
-  #proportion of cells incorrect 
-  #plot(cDat_map["cellDiffcProp"], pal = cell_pal, breaks = seq(0,1, length.out = length(cell_pal)+1), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Prop Incorrect Cells"))
-
-  
-  #for LC proportion accuracy maps
-  #prop_pal <- brewer.pal(11, "RdYlGn")
-  
-  #difference in proportion predictions (negative is under-prediction by model, positive over-prediction)
-  #plot(cDat_map["diffcProp1"], pal = prop_pal, breaks = seq(-1,1, length.out = length(prop_pal)+1), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Nature Prop Diffc"))
-  #plot(cDat_map["diffcProp2"], pal = prop_pal, breaks = seq(-1,1, length.out = length(prop_pal)+1), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Other Agri Prop Diffc"))
-  #plot(cDat_map["diffcProp3"], pal = prop_pal, breaks = seq(-1,1, length.out = length(prop_pal)+1), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Agriculture Prop Diffc"))
-  #plot(cDat_map["diffcProp5"], pal = prop_pal, breaks = seq(-1,1, length.out = length(prop_pal)+1), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Pasture Prop Diffc"))
-  #plot(cDat_map["diffcProp4"], pal = prop_pal, breaks = seq(-1,1, length.out = length(prop_pal)+1), graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Other Prop Diffc"))
-  #par(mfrow=c(1,1))  #needed to ensure plotting plays nicely with key.pos = NULL above
 
 }
 
