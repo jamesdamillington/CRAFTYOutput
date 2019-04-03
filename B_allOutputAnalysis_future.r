@@ -15,7 +15,8 @@
 
 rm(list=ls())
 
-scenario <- "ClimateRCP26_DC_DemandConst2015"
+scenario <- "ClimateRCP85-50_noGS_DemandConst2015"
+scenario_short <- "Climate RCP85"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
@@ -23,23 +24,23 @@ data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been
 region_filename <- "region2015.csv"
 
 #specify states to plot (for all states provide empty list)
-states <- c()  #all states
-#states <- c(51) #MT
+#states <- c()  #all states
+states <- c(51) #MT
 
 if(length(states) > 0){
   state_label = paste(c("_States", states), collapse = "-")
 } else{ state_label = "_States-All" }
 
-yrs <- seq(2015, 2017, 1)       #all years of analysis
-sim_yrs <- seq(2015, 2017, 1)   #movie made for all these years (will usually be identical to yrs above)
-#fig_yrs <- c(2020, 2025, 2030)  #figures output for only these years 
-fig_yrs <- c(2015, 2016, 2017)  #figures output for only these years 
+yrs <- seq(2015, 2050, 1)       #all years of analysis
+sim_yrs <- c(2016, 2020, 2025, 2030, 2035, 2040, 2045, 2050)   #movie made for all these years (will usually be identical to yrs above)
+fig_yrs <- c(2016, 2020, 2025, 2030, 2035, 2040, 2045, 2050)  #figures output for only these years 
+#fig_yrs <- c(2015, 2016, 2017)  #figures output for only these years 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
-pdfprint <- TRUE
-ras_video_output <- TRUE
-muni_video_output <- FALSE
-comp_matrices <- TRUE
+pdfprint <- F
+ras_video_output <- T
+muni_video_output <- F
+comp_matrices <- F
 
 
 #required packages
@@ -182,10 +183,10 @@ makeModLUmap <- function(LU, year) {
     labs <- c(labs, "DblC") 
     LUcols <- c(LUcols, 'darkorchid2')}
   if(3 %in% uLU) { 
-    labs <- c(labs, "SNat") 
-    LUcols <- c(LUcols, 'darkgreen')}
+    labs <- c(labs, "Nat") 
+    LUcols <- c(LUcols, 'forestgreen')}
   if(4 %in% uLU) { 
-    labs <- c(labs, "PNat") 
+    labs <- c(labs, "Nat") 
     LUcols <- c(LUcols, 'forestgreen')}
   if(5 %in% uLU) { 
     labs <- c(labs, "OAg") 
@@ -200,7 +201,7 @@ makeModLUmap <- function(LU, year) {
   rat$LandUse <- labs  
   levels(LU) <- rat 
 
-  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0("Mod LU ",year))  
+  LUmap <- levelplot(LU, att = "LandUse", col.regions=LUcols, main = paste0(scenario_short, " - ",year))  
 
   return(LUmap)
   
@@ -365,14 +366,6 @@ if(pdfprint) {
 cDat <- readr::read_csv(LC_name,
   col_types = cols(Year = col_integer())) #needed to ensure correct import (many zeros in diffcProp3 at top of file)
 
-## Mode analysis
-
-#3. maps of modes , modelled 
-
-
-
-## Proportions
-
 
 #create colours for plot
 myCols <- c("coral2","dodgerblue2","darkorchid2","forestgreen","wheat2","black","orange2")
@@ -519,6 +512,7 @@ if(pdfprint) {
 #First, Raster maps
 mps <- list()
 lus <- list()
+lum <- list() #this will hold the plot for the LU map for this year
 s <- stack()
 
 for(i in seq_along(sim_yrs)){
@@ -549,7 +543,7 @@ for(i in seq_along(sim_yrs)){
   else { s <- stack(s, LU) }
 
   pl <- list()  #this will hold the plots for the all map for this year
-  lul <- list()  #this will hold the plots for the LU map for this year
+  lul <- list()  #this will hold the plots for the LU-Agri map for this year
   
   #mask if specific states are desired
   if(!is.null(states)){
@@ -604,12 +598,15 @@ for(i in seq_along(sim_yrs)){
 
   lus[[i]] <- marrangeGrob(lul, nrow = 1, ncol = 2, top = paste0(sim_yrs[i]))
   
+  #and the LU map
+  lum[[i]] <- ModLUmap
   
   #if we want this year saved as an image 
   if(sim_yrs[i] %in% fig_yrs) {
   
     ggsave(paste0(data_dir,scenario,state_label,"_Raster_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
-    ggsave(paste0(data_dir,scenario,state_label,"_Raster_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
+    ggsave(paste0(data_dir,scenario,state_label,"_Raster_LU-Agri-Map",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
+    png(paste0(data_dir,scenario,state_label,"_Raster_LandUse-Map",sim_yrs[i],".png"), width=1200, height=1200, res=100)
   }
     
 }
@@ -657,7 +654,15 @@ if(ras_video_output)
     for(i in seq_along(lus)){
       print(lus[[i]])
     },
-    video.name = paste0(data_dir,scenario,state_label,"_Raster_LandUse.mp4"))
+    video.name = paste0(data_dir,scenario,state_label,"_Raster_LU-Agri.mp4"))
+
+    saveGIF(
+    for(i in seq_along(lum)){
+      print(lum[[i]])
+    },
+    movie.name = paste0(data_dir,scenario,state_label,"_Raster_LandUse.gif"),
+      interval=2,
+      loop=T)
   
 }
 
@@ -756,14 +761,14 @@ for(yr in sim_yrs){
     png(paste0("Data/",scenario,"/",runID,"/",scenario,state_label,"_MuniOutput_LUprops_",yr,".png"), width=1000, height=1000, res=100)
 
     #create layout
-    m <- matrix(c(1,2,3,4,4,4),nrow = 2,ncol = 3,byrow = TRUE)
-    #layout(mat = m,heights = c(0.9,0.1))
-    layout(mat = m,heights = c(lcm(15),lcm(2)))
+    m <- matrix(c(1,2,3,4,5,6,7,7,7),nrow = 3,ncol = 3,byrow = TRUE)
+    layout(mat = m,heights = c(0.45,0.45,0.1))
+    #layout(mat = m,heights = c(lcm(10),lcm(10),lcm(2)))
   
     #names columns to map
-    propmaps <- c("Mod1","Mod3","Mod5")
+    propmaps <- c("FR1","FR2","FR3","FR45","FR6","FR8")
     #labels to use on map titles
-    proptitles <- c("Mod Nature","Mod Agri","Mod Pasture")
+    proptitles <- c("Soy","Maize","DoubleC","Nature","O Agri"," Pasture")
     
     #plot maps
     for(m in 1:length(propmaps)){
