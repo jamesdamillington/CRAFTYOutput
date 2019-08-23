@@ -12,34 +12,35 @@
 
 rm(list=ls())
 
-scenario <- "Testing_2019-02-21"
+scenario <- "testing_2019-08-22b"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
+production <- T
 
 data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been saved
-region_filename <- "region.csv"
+region_filename <- "region2001_noDC_HD_2019-07-16.csv"
 
 #specify states to plot (for all states provide empty list)
-#states <- c()  #all states
-states <- c(51) #MT
+states <- c()  #all states
+#states <- c(51) #MT
 
 if(length(states) > 0){
   state_label = paste(c("_States", states), collapse = "-")
 } else{ state_label = "_States-All" }
 
 yrs <- seq(2001, 2015, 1)        #all years of analysis
-calib_yrs <- c(2005, 2010, 2015) #years for calibration analysis
-#calib_yrs <- seq(2000, 2003, 1) #years for calibration analysis
+calib_yrs <- c(2001, 2005, 2010, 2015) #years for calibration analysis
+#calib_yrs <- seq(2001, 2015, 1) #years for calibration analysis
 
-sim_yrs <- seq(2001, 2015, 1)   #movie made for all these years (will usually be identical to yrs above)
-#fig_yrs <- seq(2000, 2015, 1)#figures output for only these years 
-#sim_yrs <- seq(2000, 2003, 1)   #movie made for all these years (will usually be identical to yrs above)
-fig_yrs <- c(2005, 2010, 2015) #figures output for only these years 
+sim_yrs <- c(2001, 2005, 2010, 2015)    #movie made for all these years (will usually be identical to yrs above)
+#sim_yrs <- seq(2001, 2015, 1)   #movie made for all these years (will usually be identical to yrs above)
+fig_yrs <- c(2001, 2005, 2010, 2015) #figures output for only these years 
+#fig_yrs <- seq(2001, 2015, 1)#figures output for only these years 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
 video_output <- FALSE
-comp_matrices <- TRUE
+comp_matrices <- FALSE
 
 
 #required packages
@@ -89,7 +90,7 @@ getCapitals <- function(data)
   data %>%
     group_by(muniID) %>%
     dplyr::summarise(
-      sumAgriC = sum(Capital.Agriculture),
+      sumAgriC = sum(Capital.Moisture),
       sumNatureC = sum(Capital.Nature),
       sumHumanC = sum(Capital.Human),
       sumDevC = sum(Capital.Development),
@@ -103,7 +104,7 @@ getCapitals <- function(data)
       sumMaizeProteC = sum(Capital.Maize.Protection),
       sumPasProteC = sum(Capital.Pasture.Protection),
       sumOAgriProteC = sum(Capital.OAgri.Protection),
-      meanAgriC = round(mean(Capital.Agriculture),3),
+      meanMoisC = round(mean(Capital.Moisture),3),
       meanNatureC = round(mean(Capital.Nature),3),
       meanHumanC = round(mean(Capital.Human),3),
       meanDevC = round(mean(Capital.Development),3),
@@ -325,58 +326,59 @@ for(i in seq_along(yrs)){
   if(i == 1) { lcDat <- lcs }
   else {  lcDat <- bind_rows(lcDat, lcs) }
 }
-  #rename columns using legend above (plus others
-  lcDat <- plyr::rename(lcDat, c(
-    "LC1" = "Obs1",
-    "LC2" = "Obs2",
-    "LC3" = "Obs3",
-    "LC4" = "Obs4",
-    "LC5" = "Obs5",
-    "FR45" = "Mod1", 
-    "FR6" = "Mod2", 
-    "FR123" = "Mod3", 
-    "FR7" = "Mod4",
-    "FR8" = "Mod5",
-    "NonNAs" = "cellCount",
-    "NAs" = "NAcellCount"))
-  
-  #code to add modal cell lc for each muncipality for modelled and predicted LC
-  #mMode and oMode are characters  (the names of the column with greatest proportion)
-  lcDat <- mutate(lcDat, mM = names(lcDat)[max.col(lcDat[2:6])+1L])  #from https://stackoverflow.com/a/37197584
-  lcDat <- mutate(lcDat, oM = names(lcDat)[max.col(lcDat[7:11])+6L])  #edit 6L to get to right columns
-  
-  #remove letters from start of mM and oM (returning as integer)
-  lcDat <- mutate(lcDat, ModMode = as.integer(substring(mM, 4)))
-  lcDat <- mutate(lcDat, ObsMode = as.integer(substring(oM, 4)))
-  
-  #drop column that had letters in
-  lcDat <- lcDat %>%
-    dplyr::select(-c(mM,oM))
-  
-  #comparison of modelled mode vs observed mode (TRUE/FALSE)
-  lcDat <- lcDat[!is.na(lcDat$ObsMode),]
-  lcDat$diffcMode <- lcDat$ModMode != lcDat$ObsMode
-  
-  #calc total prop incorrectly predicted cells (in cells; need to chack ths against Pontius papers)
-  #cannot use sum as that sums entire variable
-  lcDat <- lcDat %>%
-    mutate(cellDiffcCount = round(cellCount*(abs(Mod1-Obs1) + abs(Mod2-Obs2) + abs(Mod3-Obs3) + abs(Mod4-Obs4) + abs(Mod5-Obs5)))/2) %>%
-    mutate(cellDiffcProp = round(cellDiffcCount/cellCount,3))
-  
-  #calc difference in proportion for each LC between Modelled and Observed
-  lcDat <- lcDat %>%
-    mutate(diffcProp1 = round(Mod1 - Obs1, digits = 3)) %>%
-    mutate(diffcProp2 = round(Mod2 - Obs2, digits = 3)) %>%
-    mutate(diffcProp3 = round(Mod3 - Obs3, digits = 3)) %>%
-    mutate(diffcProp4 = round(Mod4 - Obs4, digits = 3)) %>%
-    mutate(diffcProp5 = round(Mod5 - Obs5, digits = 3))
 
-  #ensure Year is written as integer (see https://github.com/tidyverse/readr/issues/645)
-  lcDat <- lcDat %>%
-    mutate(Year = as.integer(Year))
-  
-  scDat <- scDat %>%
-    mutate(Year = as.integer(Year))
+#rename columns using legend above (plus others
+lcDat <- plyr::rename(lcDat, c(
+  "LC1" = "Obs1",
+  "LC2" = "Obs2",
+  "LC3" = "Obs3",
+  "LC4" = "Obs4",
+  "LC5" = "Obs5",
+  "FR45" = "Mod1", 
+  "FR6" = "Mod2", 
+  "FR123" = "Mod3", 
+  "FR7" = "Mod4",
+  "FR8" = "Mod5",
+  "NonNAs" = "cellCount",
+  "NAs" = "NAcellCount"))
+
+#code to add modal cell lc for each muncipality for modelled and predicted LC
+#mMode and oMode are characters  (the names of the column with greatest proportion)
+lcDat <- mutate(lcDat, mM = names(lcDat)[max.col(lcDat[2:6])+1L])  #from https://stackoverflow.com/a/37197584
+lcDat <- mutate(lcDat, oM = names(lcDat)[max.col(lcDat[7:11])+6L])  #edit 6L to get to right columns
+
+#remove letters from start of mM and oM (returning as integer)
+lcDat <- mutate(lcDat, ModMode = as.integer(substring(mM, 4)))
+lcDat <- mutate(lcDat, ObsMode = as.integer(substring(oM, 4)))
+
+#drop column that had letters in
+lcDat <- lcDat %>%
+  dplyr::select(-c(mM,oM))
+
+#comparison of modelled mode vs observed mode (TRUE/FALSE)
+lcDat <- lcDat[!is.na(lcDat$ObsMode),]
+lcDat$diffcMode <- lcDat$ModMode != lcDat$ObsMode
+
+#calc total prop incorrectly predicted cells (in cells; need to chack ths against Pontius papers)
+#cannot use sum as that sums entire variable
+lcDat <- lcDat %>%
+  mutate(cellDiffcCount = round(cellCount*(abs(Mod1-Obs1) + abs(Mod2-Obs2) + abs(Mod3-Obs3) + abs(Mod4-Obs4) + abs(Mod5-Obs5)))/2) %>%
+  mutate(cellDiffcProp = round(cellDiffcCount/cellCount,3))
+
+#calc difference in proportion for each LC between Modelled and Observed
+lcDat <- lcDat %>%
+  mutate(diffcProp1 = round(Mod1 - Obs1, digits = 3)) %>%
+  mutate(diffcProp2 = round(Mod2 - Obs2, digits = 3)) %>%
+  mutate(diffcProp3 = round(Mod3 - Obs3, digits = 3)) %>%
+  mutate(diffcProp4 = round(Mod4 - Obs4, digits = 3)) %>%
+  mutate(diffcProp5 = round(Mod5 - Obs5, digits = 3))
+
+#ensure Year is written as integer (see https://github.com/tidyverse/readr/issues/645)
+lcDat <- lcDat %>%
+  mutate(Year = as.integer(Year))
+
+scDat <- scDat %>%
+  mutate(Year = as.integer(Year))
 
 #write data to file
 readr::write_csv(scDat, path = SC_name)
@@ -804,7 +806,7 @@ for(i in seq_along(sim_yrs)){
   output <- read_csv(paste0(data_dir,scenario,"-",runID,"-Cell-",sim_yrs[i],".csv"))
   
   LU <- outputRaster(output, "LandUseIndex")
-  Agri <- outputRaster(output, "Capital:Agriculture")
+  Mois <- outputRaster(output, "Capital:Moisture")
   Nat <- outputRaster(output, "Capital:Nature")
   Infra <- outputRaster(output, "Capital:Port Access")
   OAg <- outputRaster(output, "Capital:Other Agriculture")
@@ -812,6 +814,9 @@ for(i in seq_along(sim_yrs)){
   Lprice <- outputRaster(output, "Capital:Land Price")
   Spro <- outputRaster(output, "Capital:Soy Protection")
   GrowS <- outputRaster(output, "Capital:Growing Season")
+  
+  AgI <- outputRaster(output, "Capital:Agri Infrastructure")
+  OAgI <- outputRaster(output, "Capital:OAgri Infrastructure")
 
   print("readLU")
   #create stack of LU for comparison matrices
@@ -827,7 +832,7 @@ for(i in seq_along(sim_yrs)){
   pl[[1]] <- ModLUmap
   
   print("readObsLU")
-  ObsLU <- raster(paste0("Data/ObservedLCmaps/PlantedArea_brazillc_",cl,"_",sim_yrs[i],".asc"))
+  ObsLU <- raster(paste0("Data/ObservedLCmaps/LandCover",sim_yrs[i],"_",cl,"_Disagg.asc"))
 
   ObsLUmap <- makeObsLUmap(ObsLU, sim_yrs[i])
   lul[[1]] <- ObsLUmap
@@ -837,8 +842,8 @@ for(i in seq_along(sim_yrs)){
   #ras_pal <- colorRampPalette(brewer.pal(9,"YlOrBr"))(100)
   ras_pal <- viridis(100)
   
-  rl <- list(Agri, Nat, Infra, OAg, Aces, Lprice, Spro, GrowS)
-  rl_names <- c("Agriculture C", "Nature C", "Port Access C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
+  rl <- list(Mois, Nat, Infra, OAg, Aces, Lprice, Spro, GrowS)
+  rl_names <- c("Moisture C", "Nature C", "Port Access C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
   
   for(j in seq_along(rl)){
     
@@ -866,6 +871,40 @@ for(i in seq_along(sim_yrs)){
   ggsave(paste0(data_dir,scenario,state_label,"_RasterOutput_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
 
   ggsave(paste0(data_dir,scenario,state_label,"_RasterOutput_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
+  
+  png(file=paste0(data_dir,scenario,state_label,"_NatureAccess",sim_yrs[i],".png"), width=1800, height=1800, units="px")
+  p <- levelplot(Aces,
+                 col.regions=ras_pal, 
+                 at=seq(from=0,to=1,by=0.01), 
+                 contour=F, 
+                 margin=F,
+                 main = ("Nature Access"))
+  print(p)
+  dev.off()
+  
+  png(file=paste0(data_dir,scenario,state_label,"_AgriInfrastructure",sim_yrs[i],".png"), width=1800, height=1800, units="px")
+  p <- levelplot(AgI,
+                 col.regions=ras_pal, 
+                 at=seq(from=0,to=1,by=0.01), 
+                 contour=F, 
+                 margin=F,
+                 main = ("Agri Infrastructure"))
+  print(p)
+  dev.off()
+  
+  png(file=paste0(data_dir,scenario,state_label,"_OAgriInfrastructure",sim_yrs[i],".png"), width=1800, height=1800, units="px")
+  p <- levelplot(OAgI,
+                 col.regions=ras_pal, 
+                 at=seq(from=0,to=1,by=0.01), 
+                 contour=F, 
+                 margin=F,
+                 main = ("OAgri Infrastructure"))
+  print(p)
+  dev.off()
+  
+  #ggsave(paste0(data_dir,scenario,state_label,"_ModLU",sim_yrs[i],".png"), plot = lul[[2]], width=40, height=25, units="cm", dpi = 300)
+  
+  
   }
     
 }
@@ -922,7 +961,7 @@ if(video_output)
 cDat <- readr::read_csv(LC_name,
   col_types = cols(Year = col_integer(), diffcProp3 = col_double()))  #needed to ensure correct import (many zeros in diffcProp3 at top of file)
 scDat <- readr::read_csv(SC_name,
-  col_types = cols(meanAgriC = col_double(), meanNatureC = col_double(), meanInfraC = col_double(),meanLandPriceC = col_double(),meanSoyProteC = col_double(),meanGSeasonC = col_double()))  #needed to ensure correct import )
+  col_types = cols(meanMoisC = col_double(), meanNatureC = col_double(), meanInfraC = col_double(),meanLandPriceC = col_double(),meanSoyProteC = col_double(),meanGSeasonC = col_double()))  #needed to ensure correct import )
 
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
@@ -982,7 +1021,7 @@ for(yr in sim_yrs){
     }
     
     #select only Capitals we want
-    ps <- scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanLandPriceC,meanSoyProteC,meanGSeasonC)
+    ps <- scDat_map %>% dplyr::select(meanMoisC, meanNatureC, meanInfraC,meanLandPriceC,meanSoyProteC,meanGSeasonC)
     
     #open png device
     png(paste0("Data/",scenario,"/",runID,"/",scenario,state_label,"_MuniOutput_Capitals_",yr,".png"), width=1200, height=1200, res=100)
@@ -1080,7 +1119,7 @@ if(video_output)
       }
 
       
-      ps <- scDat_map %>% dplyr::select(meanAgriC, meanNatureC, meanInfraC,meanLandPriceC,meanSoyProteC,meanGSeasonC)
+      ps <- scDat_map %>% dplyr::select(meanMoisC, meanNatureC, meanInfraC,meanLandPriceC,meanSoyProteC,meanGSeasonC)
    
       #create layout
       m <- matrix(c(1,2,3,4,5,6,7,7,7),nrow = 3,ncol = 3,byrow = TRUE)
@@ -1104,6 +1143,8 @@ if(video_output)
 }
 
 
+if(production)
+{
 
 #start of 8_analyseProduction.r
 #####
@@ -1111,7 +1152,8 @@ if(video_output)
 #don't do this analysis if only creating output for individual states
 if(length(states) == 0)
 {
-  output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis.pdf")
+  output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis_allBrazil.pdf")
+  outputcsv_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis_allBrazil.csv")
   
   #for reading InternalDemand, from https://stackoverflow.com/a/17289991
   read.tcsv = function(file, header=TRUE, sep=",", ...) {
@@ -1132,7 +1174,7 @@ if(length(states) == 0)
   
   }
   
-  odata <- read_csv("Data/Production_Export_Internal.csv")
+  odata <- read_csv("Data/Production_Export_allBrazil.csv")
   
   obs_data <- odata %>%
     filter(Year <= 2015) %>%
@@ -1143,10 +1185,10 @@ if(length(states) == 0)
     dplyr::select(year, starts_with("Dairy")) %>%
     gather(key = measure, value = value_gg, -year) %>%
     mutate(commodity = "Dairy") %>%
-    mutate(measure = 
-        if_else(grepl("Production", measure), "Production", 
+    mutate(measure =
+        if_else(grepl("Production", measure), "Production",
           if_else(grepl("export", measure), "Export", "Internal")
-          ) 
+          )
       )
   
   Maize_long <- obs_data %>%
@@ -1180,8 +1222,7 @@ if(length(states) == 0)
       )
   
   obs_long <- bind_rows(Dairy_long, Maize_long, Soy_long, Meat_long) %>%
-    mutate(source = "Obs")
-    
+   mutate(source = "Obs")
   
   
   #empty table to populate from files below
@@ -1195,23 +1236,23 @@ if(length(states) == 0)
   tbl_df(mod_dat)
   
   #loop through all files 
-  for(i in seq_along(sim_yrs)){
+  for(i in seq_along(yrs)){
    
-    filen <- paste0("0_FromMaestro",sim_yrs[i],"_",scenario,".csv")
+    filen <- paste0("0_FromMaestro",yrs[i],"_",scenario,".csv")
     
     dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
   
     mod_dat <- mod_dat %>% 
-      add_row(commodity = "Soy", measure = "Production", year = sim_yrs[i], value_gg = as.numeric(dat[1,2])) %>%
-      add_row(commodity = "Soy", measure = "Storage", year = sim_yrs[i], value_gg = as.numeric(dat[4,2])) %>%
-      add_row(commodity = "Soy", measure = "Export", year = sim_yrs[i], value_gg = as.numeric(dat[3,2])) %>%
-      add_row(commodity = "Maize", measure = "Production", year = sim_yrs[i], value_gg = as.numeric(dat[5,2])) %>%
-      add_row(commodity = "Maize", measure = "Storage", year = sim_yrs[i], value_gg = as.numeric(dat[8,2])) %>%
-      add_row(commodity = "Maize", measure = "Export", year = sim_yrs[i], value_gg = as.numeric(dat[7,2])) %>%
-      add_row(commodity = "Meat", measure = "Production", year = sim_yrs[i], value_gg = as.numeric(dat[29,2])) %>%
-      add_row(commodity = "Meat", measure = "Export", year = sim_yrs[i], value_gg = as.numeric(dat[33,2])) %>%
-      add_row(commodity = "Dairy", measure = "Production", year = sim_yrs[i], value_gg = as.numeric(dat[30,2])) %>%
-      add_row(commodity = "Dairy", measure = "Export", year = sim_yrs[i], value_gg = as.numeric(dat[34,2]))
+      add_row(commodity = "Soy", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[1,2])) %>%
+      add_row(commodity = "Soy", measure = "Storage", year = yrs[i], value_gg = as.numeric(dat[4,2])) %>%
+      add_row(commodity = "Soy", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[3,2])) %>%
+      add_row(commodity = "Maize", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[6,2])) %>%
+      add_row(commodity = "Maize", measure = "Storage", year = yrs[i], value_gg = as.numeric(dat[9,2])) %>%
+      add_row(commodity = "Maize", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[8,2])) %>%
+      add_row(commodity = "Meat", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[11,2])) %>%
+      add_row(commodity = "Meat", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[14,2])) %>%
+      add_row(commodity = "Dairy", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[12,2])) %>%
+      add_row(commodity = "Dairy", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[16,2]))
   
   }
   
@@ -1221,7 +1262,7 @@ if(length(states) == 0)
   
   
   #get internal demand data
-  internal <- read.tcsv(paste0("Data/",scenario,"/StellaData/InternalCRAFTY.csv"))
+  internal <- read.tcsv(paste0("Data/",scenario,"/StellaData/InternalCRAFTY_2001_2019-08-14.csv"))
   internal <- internal %>%
     rename(year = 1, Soy = 2, Maize = 3, Meat = 4, Dairy = 5)
   
@@ -1256,6 +1297,8 @@ if(length(states) == 0)
   all_dat <- bind_rows(mod_dat, obs_long) %>%
     mutate(source = factor(source), measure = factor(measure), commodity = factor(commodity))
     
+  #write all_dat to csv
+  write_csv(all_dat, outputcsv_name)
   
   
   #CRAFTY demand - add code here
@@ -1269,17 +1312,17 @@ if(length(states) == 0)
     )
   tbl_df(crafty_dat)
   
-  for(i in seq_along(sim_yrs)){
+  for(i in seq_along(yrs)){
    
-    filen <- paste0("0_FromMaestro",sim_yrs[i],"_",scenario,".csv")
+    filen <- paste0("0_FromMaestro",yrs[i],"_",scenario,".csv")
     
     dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
   
     crafty_dat <- crafty_dat %>% 
-      add_row(commodity = "Soy", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[35,2])) %>%
-      add_row(commodity = "Maize", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[36,2])) %>%
-      add_row(commodity = "Meat", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[37,2])) %>%
-      add_row(commodity = "Dairy", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[38,2])) 
+      add_row(commodity = "Soy", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[16,2])) %>%
+      add_row(commodity = "Maize", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[17,2])) %>%
+      add_row(commodity = "Meat", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[18,2])) #%>%
+      #add_row(commodity = "Dairy", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[18,2])) 
   
   }
   
@@ -1325,15 +1368,15 @@ if(length(states) == 0)
     ggtitle("Meat") 
   print(a)
   
-  a <- all_dat %>% 
-    filter(commodity == "Dairy") %>%
-    ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
-    geom_line() +
-    scale_colour_manual(values=cbPalette) +
-    ylab("Value (gg)") +
-    xlab("Year") +
-    ggtitle("Dairy") 
-  print(a)
+  # a <- all_dat %>%
+  #   filter(commodity == "Dairy") %>%
+  #   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  #   geom_line() +
+  #   scale_colour_manual(values=cbPalette) +
+  #   ylab("Value (gg)") +
+  #   xlab("Year") +
+  #   ggtitle("Dairy")
+  # print(a)
   
   c <- crafty_dat %>% 
     ggplot(aes(x = year, y = value_cells, fill = commodity)) + 
@@ -1362,6 +1405,8 @@ if(length(states) == 0)
   }
   
 }
+  
+} #end Production
 #####
 
 dev.off() #reset par https://stackoverflow.com/a/31909011
