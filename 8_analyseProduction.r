@@ -7,14 +7,15 @@ library(tidyverse)
 library(ggplot2)
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2019-01-14"
+scenario <- "testing_2019-08-23b"
 runID <- "0-0"
-sim_yrs <- seq(2001, 2015, 1)   #consolidate these years
+yrs <- seq(2001, 2015, 1)   #consolidate these years
 
 #output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
-output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis.pdf")
 
+output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis_allBrazil.pdf")
+outputcsv_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis_allBrazil.csv")
 
 #for reading InternalDemand, from https://stackoverflow.com/a/17289991
 read.tcsv = function(file, header=TRUE, sep=",", ...) {
@@ -35,7 +36,7 @@ read.tcsv = function(file, header=TRUE, sep=",", ...) {
 
 }
 
-odata <- read_csv("Data/Production_Export_Internal.csv")
+odata <- read_csv("Data/Production_Export_allBrazil.csv")
 
 obs_data <- odata %>%
   filter(Year <= 2015) %>%
@@ -46,10 +47,10 @@ Dairy_long <- obs_data %>%
   dplyr::select(year, starts_with("Dairy")) %>%
   gather(key = measure, value = value_gg, -year) %>%
   mutate(commodity = "Dairy") %>%
-  mutate(measure = 
-      if_else(grepl("Production", measure), "Production", 
+  mutate(measure =
+      if_else(grepl("Production", measure), "Production",
         if_else(grepl("export", measure), "Export", "Internal")
-        ) 
+        )
     )
 
 Maize_long <- obs_data %>%
@@ -83,8 +84,7 @@ Soy_long <- obs_data %>%
     )
 
 obs_long <- bind_rows(Dairy_long, Maize_long, Soy_long, Meat_long) %>%
-  mutate(source = "Obs")
-  
+ mutate(source = "Obs")
 
 
 #empty table to populate from files below
@@ -98,23 +98,23 @@ mod_dat <- data.frame(
 tbl_df(mod_dat)
 
 #loop through all files 
-for(i in seq_along(sim_yrs)){
+for(i in seq_along(yrs)){
  
-  filen <- paste0("0_FromMaestro",sim_yrs[i],"_",scenario,".csv")
+  filen <- paste0("0_FromMaestro",yrs[i],"_",scenario,".csv")
   
   dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
 
   mod_dat <- mod_dat %>% 
-    add_row(commodity = "Soy", measure = "Production", year = sim_yrs[i], value_gg = as.numeric(dat[1,2])) %>%
-    add_row(commodity = "Soy", measure = "Storage", year = sim_yrs[i], value_gg = as.numeric(dat[4,2])) %>%
-    add_row(commodity = "Soy", measure = "Export", year = sim_yrs[i], value_gg = as.numeric(dat[3,2])) %>%
-    add_row(commodity = "Maize", measure = "Production", year = sim_yrs[i], value_gg = as.numeric(dat[5,2])) %>%
-    add_row(commodity = "Maize", measure = "Storage", year = sim_yrs[i], value_gg = as.numeric(dat[8,2])) %>%
-    add_row(commodity = "Maize", measure = "Export", year = sim_yrs[i], value_gg = as.numeric(dat[7,2])) %>%
-    add_row(commodity = "Meat", measure = "Production", year = sim_yrs[i], value_gg = as.numeric(dat[29,2])) %>%
-    add_row(commodity = "Meat", measure = "Export", year = sim_yrs[i], value_gg = as.numeric(dat[33,2])) %>%
-    add_row(commodity = "Dairy", measure = "Production", year = sim_yrs[i], value_gg = as.numeric(dat[30,2])) %>%
-    add_row(commodity = "Dairy", measure = "Export", year = sim_yrs[i], value_gg = as.numeric(dat[34,2]))
+    add_row(commodity = "Soy", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[1,2])) %>%
+    add_row(commodity = "Soy", measure = "Storage", year = yrs[i], value_gg = as.numeric(dat[4,2])) %>%
+    add_row(commodity = "Soy", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[3,2])) %>%
+    add_row(commodity = "Maize", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[6,2])) %>%
+    add_row(commodity = "Maize", measure = "Storage", year = yrs[i], value_gg = as.numeric(dat[9,2])) %>%
+    add_row(commodity = "Maize", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[8,2])) %>%
+    add_row(commodity = "Meat", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[11,2])) %>%
+    add_row(commodity = "Meat", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[14,2])) %>%
+    add_row(commodity = "Dairy", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[12,2])) %>%
+    add_row(commodity = "Dairy", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[16,2]))
 
 }
 
@@ -124,7 +124,7 @@ mod_dat <- mod_dat %>%
 
 
 #get internal demand data
-internal <- read.tcsv(paste0("Data/",scenario,"/StellaData/InternalCRAFTY.csv"))
+internal <- read.tcsv(paste0("Data/",scenario,"/StellaData/InternalCRAFTY_2001_2019-08-14.csv"))
 internal <- internal %>%
   rename(year = 1, Soy = 2, Maize = 3, Meat = 4, Dairy = 5)
 
@@ -155,18 +155,12 @@ mod_dat <- mod_dat %>%
 obs_long <- obs_long %>%
   dplyr::select(year, commodity, measure, source, value_gg)
 
-summary(mod_dat)
-summary(obs_long)
-
 
 all_dat <- bind_rows(mod_dat, obs_long) %>%
   mutate(source = factor(source), measure = factor(measure), commodity = factor(commodity))
   
-
-
-summary(all_dat)
-
-
+#write all_dat to csv
+write_csv(all_dat, outputcsv_name)
 
 
 #CRAFTY demand - add code here
@@ -180,24 +174,23 @@ crafty_dat <- data.frame(
   )
 tbl_df(crafty_dat)
 
-for(i in seq_along(sim_yrs)){
+for(i in seq_along(yrs)){
  
-  filen <- paste0("0_FromMaestro",sim_yrs[i],"_",scenario,".csv")
+  filen <- paste0("0_FromMaestro",yrs[i],"_",scenario,".csv")
   
   dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
 
   crafty_dat <- crafty_dat %>% 
-    add_row(commodity = "Soy", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[35,2])) %>%
-    add_row(commodity = "Maize", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[36,2])) %>%
-    add_row(commodity = "Meat", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[37,2])) %>%
-    add_row(commodity = "Dairy", measure = "Demand", year = sim_yrs[i], value_cells = as.numeric(dat[38,2])) 
+    add_row(commodity = "Soy", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[16,2])) %>%
+    add_row(commodity = "Maize", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[17,2])) %>%
+    add_row(commodity = "Meat", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[18,2])) #%>%
+    #add_row(commodity = "Dairy", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[18,2])) 
 
 }
 
 
 
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442")
-
 
 
 if(pdfprint) {
@@ -237,15 +230,15 @@ a <- all_dat %>%
   ggtitle("Meat") 
 print(a)
 
-a <- all_dat %>% 
-  filter(commodity == "Dairy") %>%
-  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
-  geom_line() +
-  scale_colour_manual(values=cbPalette) +
-  ylab("Value (gg)") +
-  xlab("Year") +
-  ggtitle("Dairy") 
-print(a)
+# a <- all_dat %>%
+#   filter(commodity == "Dairy") %>%
+#   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+#   geom_line() +
+#   scale_colour_manual(values=cbPalette) +
+#   ylab("Value (gg)") +
+#   xlab("Year") +
+#   ggtitle("Dairy")
+# print(a)
 
 c <- crafty_dat %>% 
   ggplot(aes(x = year, y = value_cells, fill = commodity)) + 
@@ -268,19 +261,10 @@ c <- crafty_dat %>%
   ggtitle("CRAFTY Demand")
 print(c)
 
-c <- crafty_dat %>% 
-  ggplot(aes(x = year, y = value_cells, fill = commodity)) + 
-  geom_bar(stat="identity", position="dodge") +
-  scale_y_continuous(name = "Cells", labels = scales::comma) +
-  ggtitle("CRAFTY Demand")
-print(c)
-
 
 if(pdfprint) {
   dev.off()
 }
-
-#also need to add empirical values for comparison...
 
 
 
