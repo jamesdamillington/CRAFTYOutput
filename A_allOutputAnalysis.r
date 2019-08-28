@@ -12,13 +12,13 @@
 
 rm(list=ls())
 
-scenario <- "testing_2019-08-22b"
+scenario <- "testing_2019-08-23b"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 production <- T
 
 data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been saved
-region_filename <- "region2001_noDC_HD_2019-07-16.csv"
+region_filename <- "region2001_noDC_HD_2019-08-20.csv"
 
 #specify states to plot (for all states provide empty list)
 states <- c()  #all states
@@ -820,7 +820,7 @@ for(i in seq_along(sim_yrs)){
 
   print("readLU")
   #create stack of LU for comparison matrices
-  LU[LU == -1] <- NA #remove LazyFR if present
+  LU[LU == -1] <- 3 #set LazyFR to SNat
   if(i == 1) { s <- stack(LU) }
   else { s <- stack(s, LU) }
 
