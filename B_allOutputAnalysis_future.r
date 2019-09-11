@@ -41,7 +41,7 @@ pdfprint <- F
 ras_video_output <- T
 muni_video_output <- F
 comp_matrices <- F
-
+production <- T
 
 #required packages
 library(tidyverse)
@@ -90,7 +90,7 @@ getCapitals <- function(data)
   data %>%
     group_by(muniID) %>%
     dplyr::summarise(
-      sumAgriC = sum(Capital.Agriculture),
+      sumAgriC = sum(Capital.Moisture),
       sumNatureC = sum(Capital.Nature),
       sumHumanC = sum(Capital.Human),
       sumDevC = sum(Capital.Development),
@@ -104,7 +104,7 @@ getCapitals <- function(data)
       sumMaizeProteC = sum(Capital.Maize.Protection),
       sumPasProteC = sum(Capital.Pasture.Protection),
       sumOAgriProteC = sum(Capital.OAgri.Protection),
-      meanAgriC = round(mean(Capital.Agriculture),3),
+      meanAgriC = round(mean(Capital.Moisture),3),
       meanNatureC = round(mean(Capital.Nature),3),
       meanHumanC = round(mean(Capital.Human),3),
       meanDevC = round(mean(Capital.Development),3),
@@ -236,6 +236,38 @@ clipStates <- function(inRaster, statemap, states_ls)
     
 }
 
+
+read_cDat <- function() {
+  
+  cDat <- readr::read_csv(LC_name, col_types = cols(
+    muniID = col_integer(),	
+    FR1	= col_double(),
+    FR2	= col_double(),	
+    FR3	= col_double(),	
+    FR45	= col_double(),
+    FR6	= col_double(),	
+    FR7	= col_double(),	
+    FR8	= col_double(),	
+    cellCount = col_integer(),	
+    Year = col_integer(),	
+    ModMode = col_integer()))
+  
+  return(cDat)
+}
+
+
+read_scDat <- function(){
+  
+  scDat <- readr::read_csv(SC_name, col_types = cols(
+    meanAgriC = col_double(), 
+    meanNatureC = col_double(), 
+    meanInfraC = col_double(),
+    meanLandPriceC = col_double(),
+    meanSoyProteC = col_double(),
+    meanGSeasonC = col_double()))  
+
+  return(scDat)
+}
 #####
 
 
@@ -363,9 +395,7 @@ if(pdfprint) {
   pdf(file = paste0(data_dir,scenario,state_label,"_LCtimeline.pdf"))
 }
 
-cDat <- readr::read_csv(LC_name,
-  col_types = cols(Year = col_integer())) #needed to ensure correct import (many zeros in diffcProp3 at top of file)
-
+cDat <- read_cDat()   #function so col types can be modified once 
 
 #create colours for plot
 myCols <- c("coral2","dodgerblue2","darkorchid2","forestgreen","wheat2","black","orange2")
@@ -404,7 +434,7 @@ cDat_long_mod <- cDat %>%
   dplyr::select(Year, state:Pas.Mod) %>%
   gather(key = LC, value = hectares, -Year, -state) %>% 
   group_by(Year,LC) %>%
-  summarise_at(vars(matches("hectares")),sum) %>%
+  summarise_at(vars(matches("hectares")),funs(sum((.), na.rm=TRUE))) %>%
   mutate(source = "Mod")
 
 
@@ -464,8 +494,7 @@ lc_pal <- c("coral2","dodgerblue2","darkorchid2","forestgreen", "wheat2", "black
 lc_labs <- c("Soy","Maize","DoubleC","Nature", "Other Agri", "Other", "Pasture")
 
 
-cDat <- readr::read_csv(LC_name,
-  col_types = cols(Year = col_integer())) #needed to ensure correct import (many zeros in diffcProp3 at top of file)
+cDat <- read_cDat()   #function so col types can be modified once 
 
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
@@ -527,7 +556,7 @@ for(i in seq_along(sim_yrs)){
   output <- read_csv(paste0(data_dir,scenario,"-",runID,"-Cell-",sim_yrs[i],".csv"))
   
   LU <- outputRaster(output, "LandUseIndex")
-  Agri <- outputRaster(output, "Capital:Agriculture")
+  Agri <- outputRaster(output, "Capital:Moisture")
   Nat <- outputRaster(output, "Capital:Nature")
   Infra <- outputRaster(output, "Capital:Port Access")
   OAg <- outputRaster(output, "Capital:Other Agriculture")
@@ -565,7 +594,7 @@ for(i in seq_along(sim_yrs)){
   ras_pal <- viridis(100)
   
   rl <- list(Agri, Nat, Infra, OAg, Aces, Lprice, Spro, GrowS)
-  rl_names <- c("Agriculture C", "Nature C", "Port Access C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
+  rl_names <- c("Moisture C", "Nature C", "Port Access C", "Other Agri C", "Accessibility C", "Land Price", "Soy Protection", "Growing Season") 
   
   #mask the maps if specific states are desired
   if(!is.null(states)){
@@ -606,7 +635,7 @@ for(i in seq_along(sim_yrs)){
   
     ggsave(paste0(data_dir,scenario,state_label,"_Raster_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
     ggsave(paste0(data_dir,scenario,state_label,"_Raster_LU-Agri-Map",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
-    png(paste0(data_dir,scenario,state_label,"_Raster_LandUse-Map",sim_yrs[i],".png"), width=1200, height=1200, res=100)
+    #png(paste0(data_dir,scenario,state_label,"_Raster_LandUse-Map",sim_yrs[i],".png"), width=1200, height=1200, res=100)
   }
     
 }
@@ -669,10 +698,9 @@ if(ras_video_output)
 
 #Next, vector maps
 #different approach - create figures first, then videos (as cannot save sf plot objects to a list)
-cDat <- readr::read_csv(LC_name,
-  col_types = cols(Year = col_integer(), diffcProp3 = col_double()))  #needed to ensure correct import (many zeros in diffcProp3 at top of file)
-scDat <- readr::read_csv(SC_name,
-  col_types = cols(meanAgriC = col_double(), meanNatureC = col_double(), meanInfraC = col_double(),meanLandPriceC = col_double(),meanSoyProteC = col_double(),meanGSeasonC = col_double()))  #needed to ensure correct import )
+cDat <- read_cDat()   #function so col types can be modified once 
+
+scDat <- read_scDat() #function so col types can be modified once 
 
 #note following shp was created using simplyfying_shapefiles.r
 BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
@@ -894,6 +922,8 @@ if(muni_video_output)
 }
 
 
+if(production)
+{
 
 #start of 8_analyseProduction.r
 #####
@@ -901,110 +931,261 @@ if(muni_video_output)
 #don't do this analysis if only creating output for individual states
 if(length(states) == 0)
 {
-  output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis_NoSTELLA.pdf")
-
+  output_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis_allBrazil.pdf")
+  outputcsv_name <- paste0("Data/",scenario,"/",runID,"/",scenario,"_ProductionAnalysis_allBrazil.csv")
+  
+  #for reading InternalDemand, from https://stackoverflow.com/a/17289991
+  read.tcsv = function(file, header=TRUE, sep=",", ...) {
+  
+    n = max(count.fields(file, sep=sep), na.rm=TRUE)
+    x = readLines(file)
+  
+    .splitvar = function(x, sep, n) {
+      var = unlist(strsplit(x, split=sep))
+      length(var) = n
+      return(var)
+    }
+  
+    x = do.call(cbind, lapply(x, .splitvar, sep=sep, n=n))
+    x = apply(x, 1, paste, collapse=sep) 
+    out = read.csv(text=x, sep=sep, header=header, ...)
+    return(out)
+  
+  }
+  
+  odata <- read_csv("Data/Production_Export_allBrazil.csv")
+  
+  obs_data <- odata %>%
+    filter(Year <= 2015) %>%
+    dplyr::select(-ends_with("export_China_gg")) %>%
+    rename(year = Year)
+  
+  Dairy_long <- obs_data %>%
+    dplyr::select(year, starts_with("Dairy")) %>%
+    gather(key = measure, value = value_gg, -year) %>%
+    mutate(commodity = "Dairy") %>%
+    mutate(measure =
+        if_else(grepl("Production", measure), "Production",
+          if_else(grepl("export", measure), "Export", "Internal")
+          )
+      )
+  
+  Maize_long <- obs_data %>%
+    dplyr::select(year, starts_with("Maize")) %>%
+    gather(key = measure, value = value_gg, -year) %>%
+    mutate(commodity = "Maize") %>%
+    mutate(measure = 
+        if_else(grepl("Production", measure), "Production", 
+          if_else(grepl("export", measure), "Export", "Internal")
+          ) 
+      )
+  
+  Meat_long <- obs_data %>%
+    dplyr::select(year, starts_with("Meat")) %>%
+    gather(key = measure, value = value_gg, -year) %>%
+    mutate(commodity = "Meat") %>%
+    mutate(measure = 
+        if_else(grepl("Production", measure), "Production", 
+          if_else(grepl("export", measure), "Export", "Internal")
+          ) 
+      )
+  
+  Soy_long <- obs_data %>%
+    dplyr::select(year, starts_with("Soy")) %>%
+    gather(key = measure, value = value_gg, -year) %>%
+    mutate(commodity = "Soy") %>%
+    mutate(measure = 
+        if_else(grepl("Production", measure), "Production", 
+          if_else(grepl("export", measure), "Export", "Internal")
+          ) 
+      )
+  
+  obs_long <- bind_rows(Dairy_long, Maize_long, Soy_long, Meat_long) %>%
+   mutate(source = "Obs")
+  
+  
   #empty table to populate from files below
   mod_dat <- data.frame(
-      service = character(),
+      commodity = character(),
       measure = character(),
       year = integer(),
-      value = numeric()
-
+      value_gg = numeric()
+      
     )
   tbl_df(mod_dat)
-
-  for(i in seq_along(sim_yrs)){
+  
+  #loop through all files 
+  for(i in seq_along(yrs)){
+   
+    filen <- paste0("0_FromMaestro",yrs[i],"_",scenario,".csv")
     
-    #i <- 2
-    #Load model output data
-    output <- read.csv(paste0("Data/",scenario,"/",runID,"/",scenario,"-",runID,"-Cell-",sim_yrs[i],".csv"))
-    
-    Soy <- output %>%
-      filter(`Service.Soy` > 0) %>%
-      summarise(mn = mean(`Service.Soy`), sm = sum(`Service.Soy`), mm = min(`Service.Soy`), mx = max(`Service.Soy`), sd = sd(`Service.Soy`))
+    dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
   
-    Maize <- output %>%
-      filter(`Service.Maize` > 0) %>%
-      summarise(mn = mean(`Service.Maize`), sm = sum(`Service.Maize`), mm = min(`Service.Maize`), mx = max(`Service.Maize`), sd = sd(`Service.Maize`))
+    mod_dat <- mod_dat %>% 
+      add_row(commodity = "Soy", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[1,2])) %>%
+      add_row(commodity = "Soy", measure = "Storage", year = yrs[i], value_gg = as.numeric(dat[4,2])) %>%
+      add_row(commodity = "Soy", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[3,2])) %>%
+      add_row(commodity = "Maize", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[6,2])) %>%
+      add_row(commodity = "Maize", measure = "Storage", year = yrs[i], value_gg = as.numeric(dat[9,2])) %>%
+      add_row(commodity = "Maize", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[8,2])) %>%
+      add_row(commodity = "Meat", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[11,2])) %>%
+      add_row(commodity = "Meat", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[14,2])) %>%
+      add_row(commodity = "Dairy", measure = "Production", year = yrs[i], value_gg = as.numeric(dat[12,2])) %>%
+      add_row(commodity = "Dairy", measure = "Export", year = yrs[i], value_gg = as.numeric(dat[16,2]))
   
-    Nature <- output %>%
-      filter(`Service.Nature` > 0) %>%
-      summarise(mn = mean(`Service.Nature`), sm = sum(`Service.Nature`), mm = min(`Service.Nature`), mx = max(`Service.Nature`), sd = sd(`Service.Nature`))
-  
-    OAgri <- output %>%
-      filter(`Service.Other.Agriculture` > 0) %>%
-      summarise(mn = mean(`Service.Other.Agriculture`), sm = sum(`Service.Other.Agriculture`), mm = min(`Service.Other.Agriculture`), mx = max(`Service.Other.Agriculture`), sd = sd(`Service.Other.Agriculture`))
-  
-    Other <- output %>%
-      filter(`Service.Other` > 0) %>%
-      summarise(mn = mean(`Service.Other`), sm = sum(`Service.Other`), mm = min(`Service.Other`), mx = max(`Service.Other`), sd = sd(`Service.Other`))
-  
-    Pasture <- output %>%
-      filter(`Service.Pasture` > 0) %>%
-      summarise(mn = mean(`Service.Pasture`), sm = sum(`Service.Pasture`), mm = min(`Service.Pasture`), mx = max(`Service.Pasture`), sd = sd(`Service.Pasture`))
-  
-    
-    lserv <- c("Soy", "Maize", "Pasture")
-    
-    for(j in lserv) {
-  
-        
-    mod_dat <- mod_dat %>%
-      add_row(year = sim_yrs[i], service = j, measure = "Mean", value = round(UQ(as.name(j))$mn,3)) %>%
-      add_row(year = sim_yrs[i], service = j, measure = "Sum", value = round(UQ(as.name(j))$sm,3)) %>%
-      add_row(year = sim_yrs[i], service = j, measure = "Min", value = round(UQ(as.name(j))$mm,3)) %>%
-      add_row(year = sim_yrs[i], service = j, measure = "Max", value = round(UQ(as.name(j))$mx,3)) %>%
-      add_row(year = sim_yrs[i], service = j, measure = "SD", value = round(UQ(as.name(j))$sd,3)) 
-    
-    }
   }
-
-  mod_serv <- mod_dat %>%
-  filter(measure == "Sum") %>%
-  #filter(service != "Other", service != "OAgri") %>%
-  rename(commodity = service) %>%
-  mutate(measure = "Production") %>%
-  mutate(value_gg = if_else(commodity == "Soy", value * 30,
-    if_else(commodity == "Maize", value * 20, value * 1.9)  #this value of 1.9 comes from standard mean proportionmilk of all states then use to weight average of milk and meat intensities (2.5*0.74)+(0.275*0.26)
-  )) %>%
-  mutate(value_gg = round(value_gg,1)) %>%
-  dplyr::select(-value) %>%
-  mutate(source = "Mod") %>%
-  dplyr::select(year, measure, value_gg, commodity, source)
-
- 
+  
+  #needed to prevent bind_rows error below
+  mod_dat <- mod_dat %>%
+    mutate(measure = as.character(measure), commodity = as.character(commodity))
+  
+  
+  #get internal demand data
+  internal <- read.tcsv(paste0("Data/",scenario,"/StellaData/InternalCRAFTY_2001_2019-08-14_to2030.csv"))
+  internal <- internal %>%
+    rename(year = 1, Soy = 2, Maize = 3, Meat = 4, Dairy = 5)
+  
+  internal <- internal %>%
+    gather(key = commodity, value = value_gg, -year) %>%
+    mutate(measure = "IntDemand") %>%
+    dplyr::select(commodity, measure, year, value_gg)
+  
+  
+  #get external demand data
+  external <- read.tcsv(paste0("Data/",scenario,"/StellaData/ToCRAFTY.csv"))
+  external <- external %>%
+    rename(year = 1, Soy = 2, Maize = 3, Meat = 4, Dairy = 5)
+  
+  external <- external %>%
+    gather(key = commodity, value = value_gg, -year) %>%
+    mutate(measure = "ExtDemand") %>%
+    dplyr::select(commodity, measure, year, value_gg)
+  
+  
+  #combine
+  mod_dat <- bind_rows(mod_dat, internal, external)  %>%
+    mutate(source = "Modelled")
+  
+  mod_dat <- mod_dat %>%
+    dplyr::select(year, commodity, measure, source, value_gg) 
+  
+  obs_long <- obs_long %>%
+    dplyr::select(year, commodity, measure, source, value_gg)
+  
+  
+  all_dat <- bind_rows(mod_dat, obs_long) %>%
+    mutate(source = factor(source), measure = factor(measure), commodity = factor(commodity))
+    
+  #write all_dat to csv
+  write_csv(all_dat, outputcsv_name)
+  
+  
+  #CRAFTY demand - add code here
+  #empty table to populate from files below
+  crafty_dat <- data.frame(
+      commodity = character(),
+      measure = character(),
+      year = integer(),
+      value_cells = numeric()
+      
+    )
+  tbl_df(crafty_dat)
+  
+  for(i in seq_along(yrs)){
+   
+    filen <- paste0("0_FromMaestro",yrs[i],"_",scenario,".csv")
+    
+    dat <- read_csv(paste0("Data/",scenario,"/StellaData/",filen),col_names=F)
+  
+    crafty_dat <- crafty_dat %>% 
+      add_row(commodity = "Soy", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[16,2])) %>%
+      add_row(commodity = "Maize", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[17,2])) %>%
+      add_row(commodity = "Meat", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[18,2])) %>%
+      add_row(commodity = "Nature", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[20,2])) %>%
+      add_row(commodity = "OAgri", measure = "Demand", year = yrs[i], value_cells = as.numeric(dat[21,2]))
+  }
+  
+  
+  
   cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442")
-
-
+  
+  
   if(pdfprint) {
     pdf(file = output_name)
   }
-
+  
   #now plot
-  c <- mod_dat %>%
-    filter(measure == "Sum") %>%
-    ggplot(aes(x = year, y = value, color = service)) + 
-        geom_line() +
-        scale_y_continuous(name = "CRAFTY units", labels = scales::comma) +
-        ggtitle("Sum Service")
-  print(c)
-
-
-  a <- mod_serv %>%
-    #filter(commodity == "Maize") %>%
-    ggplot(aes(x=year, y=value_gg, color=commodity)) +
+  #timelines of production, storage, export by commodity
+  a <- all_dat %>% 
+    filter(commodity == "Soy") %>%
+    ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
     geom_line() +
     scale_colour_manual(values=cbPalette) +
-    ylab("Production (gg)") +
-    xlab("Year") 
+    ylab("Value (gg)") +
+    xlab("Year") +
+    ggtitle("Soy") 
   print(a)
-
+  
+  
+  a <- all_dat %>% 
+    filter(commodity == "Maize") %>%
+    ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+    geom_line() +
+    scale_colour_manual(values=cbPalette) +
+    ylab("Value (gg)") +
+    xlab("Year") +
+    ggtitle("Maize") 
+  print(a)
+  
+  a <- all_dat %>% 
+    filter(commodity == "Meat") %>%
+    ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+    geom_line() +
+    scale_colour_manual(values=cbPalette) +
+    ylab("Value (gg)") +
+    xlab("Year") +
+    ggtitle("Meat") 
+  print(a)
+  
+  # a <- all_dat %>%
+  #   filter(commodity == "Dairy") %>%
+  #   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  #   geom_line() +
+  #   scale_colour_manual(values=cbPalette) +
+  #   ylab("Value (gg)") +
+  #   xlab("Year") +
+  #   ggtitle("Dairy")
+  # print(a)
+  
+  c <- crafty_dat %>% 
+    ggplot(aes(x = year, y = value_cells, fill = commodity)) + 
+    geom_bar(position = "fill",stat = "identity", colour="white") +
+    scale_y_continuous(name = "Proportion of Total", labels = scales::percent_format()) +
+    ggtitle("CRAFTY Demand")
+  print(c)
+  
+  c <- crafty_dat %>% 
+    ggplot(aes(x = year, y = value_cells, fill = commodity)) + 
+    geom_bar(stat = "identity", colour="white") +
+    scale_y_continuous(name = "Cells", labels = scales::comma) +
+    ggtitle("CRAFTY Demand")
+  print(c)
+  
+  c <- crafty_dat %>% 
+    ggplot(aes(x = year, y = value_cells, colour = commodity)) + 
+    geom_line() +
+    scale_y_continuous(name = "Cells", labels = scales::comma) +
+    ggtitle("CRAFTY Demand")
+  print(c)
+  
+  
   if(pdfprint) {
     dev.off()
   }
-
+  
 }
+  
+} #end Production
 #####
 
 dev.off() #reset par https://stackoverflow.com/a/31909011
-
