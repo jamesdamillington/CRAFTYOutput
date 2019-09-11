@@ -8,9 +8,10 @@ library(tidyverse)
 library(ggplot2)
 
 #set for the run in CRAFTY (althrough runID difficult to control)
-scenario <- "Testing_2018-08-12"
+scenario <- "Testing_2019-07-16b"
+demand <- "Demand_2019-07-16b"
 runID <- "0-0"
-sim_yrs <- seq(2000, 2015, 1)   #consolidate these years
+sim_yrs <- seq(2001, 2015, 1)   #consolidate these years
 
 #output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
 pdfprint <- TRUE
@@ -30,7 +31,7 @@ tbl_df(mod_dat)
 
 for(i in seq_along(sim_yrs)){
   
-  #i <- 1
+  #i <- 11
   #Load model output data
   output <- read.csv(paste0("Data/",scenario,"/",runID,"/",scenario,"-",runID,"-Cell-",sim_yrs[i],".csv"))
   
@@ -42,6 +43,11 @@ for(i in seq_along(sim_yrs)){
     filter(`Service.Maize` > 0) %>%
     summarise(mn = mean(`Service.Maize`), sm = sum(`Service.Maize`), mm = min(`Service.Maize`), mx = max(`Service.Maize`), sd = sd(`Service.Maize`))
 
+  Agri <- output %>%
+    mutate(`Service.Agri` = `Service.Soy` + `Service.Maize`) %>%
+    filter(`Service.Agri` > 0) %>%
+    summarise(mn = mean(`Service.Agri`), sm = sum(`Service.Agri`), mm = min(`Service.Agri`), mx = max(`Service.Agri`), sd = sd(`Service.Agri`))
+    
   Nature <- output %>%
     filter(`Service.Nature` > 0) %>%
     summarise(mn = mean(`Service.Nature`), sm = sum(`Service.Nature`), mm = min(`Service.Nature`), mx = max(`Service.Nature`), sd = sd(`Service.Nature`))
@@ -59,7 +65,7 @@ for(i in seq_along(sim_yrs)){
     summarise(mn = mean(`Service.Pasture`), sm = sum(`Service.Pasture`), mm = min(`Service.Pasture`), mx = max(`Service.Pasture`), sd = sd(`Service.Pasture`))
 
   
-  lserv <- c("Soy", "Maize", "Pasture")
+  lserv <- c("Soy", "Maize", "Pasture", "Agri")
   
   for(j in lserv) {
 
@@ -109,62 +115,62 @@ mod_serv <- mod_dat %>%
 
 
 
-odata <- read_csv("Data/Production_Export_Internal.csv")
-
-obs_data <- odata %>%
-  filter(Year <= 2015) %>%
-  dplyr::select(-ends_with("export_China_gg")) %>%
-  rename(year = Year)
-
-Dairy_long <- obs_data %>%
-  dplyr::select(year, starts_with("Dairy")) %>%
-  gather(key = measure, value = value_gg, -year) %>%
-  mutate(commodity = "Dairy") %>%
-  mutate(measure = 
-      if_else(grepl("Production", measure), "Production", 
-        if_else(grepl("export", measure), "Export", "Internal")
-        ) 
-    )
-
-Maize_long <- obs_data %>%
-  dplyr::select(year, starts_with("Maize")) %>%
-  gather(key = measure, value = value_gg, -year) %>%
-  mutate(commodity = "Maize") %>%
-  mutate(measure = 
-      if_else(grepl("Production", measure), "Production", 
-        if_else(grepl("export", measure), "Export", "Internal")
-        ) 
-    )
-
-Meat_long <- obs_data %>%
-  dplyr::select(year, starts_with("Meat")) %>%
-  gather(key = measure, value = value_gg, -year) %>%
-  mutate(commodity = "Meat") %>%
-  mutate(measure = 
-      if_else(grepl("Production", measure), "Production", 
-        if_else(grepl("export", measure), "Export", "Internal")
-        ) 
-    )
-
-Soy_long <- obs_data %>%
-  dplyr::select(year, starts_with("Soy")) %>%
-  gather(key = measure, value = value_gg, -year) %>%
-  mutate(commodity = "Soy") %>%
-  mutate(measure = 
-      if_else(grepl("Production", measure), "Production", 
-        if_else(grepl("export", measure), "Export", "Internal")
-        ) 
-    )
-
-obs_long <- bind_rows(Dairy_long, Maize_long, Soy_long, Meat_long) %>%
-  mutate(source = "Obs")
-
-all_dat <- bind_rows(mod_serv, obs_long) %>%
-  mutate(source = factor(source), measure = factor(measure), commodity = factor(commodity))
-  
-
-
-summary(all_dat)
+# odata <- read_csv("Data/Production_Export_Internal.csv")
+# 
+# obs_data <- odata %>%
+#   filter(Year <= 2015) %>%
+#   dplyr::select(-ends_with("export_China_gg")) %>%
+#   rename(year = Year)
+# 
+# Dairy_long <- obs_data %>%
+#   dplyr::select(year, starts_with("Dairy")) %>%
+#   gather(key = measure, value = value_gg, -year) %>%
+#   mutate(commodity = "Dairy") %>%
+#   mutate(measure = 
+#       if_else(grepl("Production", measure), "Production", 
+#         if_else(grepl("export", measure), "Export", "Internal")
+#         ) 
+#     )
+# 
+# Maize_long <- obs_data %>%
+#   dplyr::select(year, starts_with("Maize")) %>%
+#   gather(key = measure, value = value_gg, -year) %>%
+#   mutate(commodity = "Maize") %>%
+#   mutate(measure = 
+#       if_else(grepl("Production", measure), "Production", 
+#         if_else(grepl("export", measure), "Export", "Internal")
+#         ) 
+#     )
+# 
+# Meat_long <- obs_data %>%
+#   dplyr::select(year, starts_with("Meat")) %>%
+#   gather(key = measure, value = value_gg, -year) %>%
+#   mutate(commodity = "Meat") %>%
+#   mutate(measure = 
+#       if_else(grepl("Production", measure), "Production", 
+#         if_else(grepl("export", measure), "Export", "Internal")
+#         ) 
+#     )
+# 
+# Soy_long <- obs_data %>%
+#   dplyr::select(year, starts_with("Soy")) %>%
+#   gather(key = measure, value = value_gg, -year) %>%
+#   mutate(commodity = "Soy") %>%
+#   mutate(measure = 
+#       if_else(grepl("Production", measure), "Production", 
+#         if_else(grepl("export", measure), "Export", "Internal")
+#         ) 
+#     )
+# 
+# obs_long <- bind_rows(Dairy_long, Maize_long, Soy_long, Meat_long) %>%
+#   mutate(source = "Obs")
+# 
+# all_dat <- bind_rows(mod_serv, obs_long) %>%
+#   mutate(source = factor(source), measure = factor(measure), commodity = factor(commodity))
+#   
+# 
+# 
+# summary(all_dat)
 
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442")
 
@@ -181,37 +187,37 @@ c <- mod_dat %>%
       ggtitle("Sum Service")
 print(c)
 
-a <- all_dat %>% 
-  filter(commodity == "Soy") %>%
-  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
-  geom_line() +
-  scale_colour_manual(values=cbPalette) +
-  ylab("Value (gg)") +
-  xlab("Year") +
-  ggtitle("Soy") 
-print(a)
-
-
-a <- all_dat %>% 
-  filter(commodity == "Maize") %>%
-  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
-  geom_line() +
-  scale_colour_manual(values=cbPalette) +
-  ylab("Value (gg)") +
-  xlab("Year") +
-  ggtitle("Maize") 
-print(a)
-  
-a <- all_dat %>% 
-  filter(commodity == "Pasture") %>%
-  ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
-  geom_line() +
-  scale_colour_manual(values=cbPalette) +
-  scale_y_continuous(limits = c(0, 100000)) +
-  ylab("Value (gg)") +
-  xlab("Year") +
-  ggtitle("Pasture") 
-print(a)
+# a <- all_dat %>% 
+#   filter(commodity == "Soy") %>%
+#   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+#   geom_line() +
+#   scale_colour_manual(values=cbPalette) +
+#   ylab("Value (gg)") +
+#   xlab("Year") +
+#   ggtitle("Soy") 
+# print(a)
+# 
+# 
+# a <- all_dat %>% 
+#   filter(commodity == "Maize") %>%
+#   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+#   geom_line() +
+#   scale_colour_manual(values=cbPalette) +
+#   ylab("Value (gg)") +
+#   xlab("Year") +
+#   ggtitle("Maize") 
+# print(a)
+#   
+# a <- all_dat %>% 
+#   filter(commodity == "Pasture") %>%
+#   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+#   geom_line() +
+#   scale_colour_manual(values=cbPalette) +
+#   scale_y_continuous(limits = c(0, 100000)) +
+#   ylab("Value (gg)") +
+#   xlab("Year") +
+#   ggtitle("Pasture") 
+# print(a)
   
 if(pdfprint) {
   dev.off()
