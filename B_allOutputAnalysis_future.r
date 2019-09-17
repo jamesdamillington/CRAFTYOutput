@@ -137,7 +137,7 @@ getFRs <- function(data)
                      FR123 = round(sum(LandUse == 'FR1' | LandUse == 'FR2' | LandUse == 'FR3') / n(), 3),
                      FR4 = round(sum(LandUse == 'FR4') / n(), 3),
                      FR5 = round(sum(LandUse == 'FR5') / n(), 3),
-                     FR45 = round(sum(LandUse == 'FR4' | LandUse == 'FR5') / n(), 3),
+                     FR45 = round(sum(LandUse == 'FR4' | LandUse == 'FR5' | LandUse == 'Lazy FR') / n(), 3),
                      FR6 = round(sum(LandUse == 'FR6') / n(), 3),
                      FR7 = round(sum(LandUse == 'FR7') / n(), 3),
                      FR8 = round(sum(LandUse == 'FR8') / n(), 3)
@@ -567,7 +567,7 @@ for(i in seq_along(sim_yrs)){
 
   print("readLU")
   #create stack of LU for comparison matrices
-  LU[LU == -1] <- NA #remove LazyFR if present
+  LU[LU == -1] <- 3 #set LazyFR to SNat
   if(i == 1) { s <- stack(LU) }
   else { s <- stack(s, LU) }
 
