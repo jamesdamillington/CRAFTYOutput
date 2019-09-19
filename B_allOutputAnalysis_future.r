@@ -460,7 +460,7 @@ c <- cDat_long_mod %>%
   ggplot(aes(x = Year, y = hectares,color = LC, linetype = source)) + 
   geom_line(size = 1) +
   scale_colour_manual(name = "LC",values = myCols) +
-  scale_y_continuous(name = "Hectares", labels = scales::comma) +
+  scale_y_continuous(name = "Hectares", labels = scales::comma, limits=c(0,225000000)) +
   ggtitle(scenario)
 print(c)
 
@@ -1121,6 +1121,7 @@ if(length(states) == 0)
     ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
     geom_line() +
     scale_colour_manual(values=cbPalette) +
+    scale_y_continuous(labels = scales::comma, limits=c(0,150000)) +
     ylab("Value (gg)") +
     xlab("Year") +
     ggtitle("Soy") 
@@ -1132,6 +1133,7 @@ if(length(states) == 0)
     ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
     geom_line() +
     scale_colour_manual(values=cbPalette) +
+    scale_y_continuous(labels = scales::comma, limits=c(0,150000)) +
     ylab("Value (gg)") +
     xlab("Year") +
     ggtitle("Maize") 
@@ -1142,6 +1144,7 @@ if(length(states) == 0)
     ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
     geom_line() +
     scale_colour_manual(values=cbPalette) +
+    scale_y_continuous(labels = scales::comma, limits=c(0,15000)) +
     ylab("Value (gg)") +
     xlab("Year") +
     ggtitle("Meat") 
