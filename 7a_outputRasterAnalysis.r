@@ -38,6 +38,7 @@ fig_yrs <- c(2001, 2005, 2010, 2015) #figures output for only these years
 scenario <- "Testing_2018-09-27e"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
+maskpath <- "Data/ObservedLCmaps/sim10_BRmunis_latlon_5km.asc"
 
 #outputs to create
 video_output <- FALSE
@@ -108,9 +109,9 @@ makeModLUmap <- function(LU, year) {
   
 }
 
-makeObsLUmap <- function(LU, year) {
+makeObsLUmap <- function(LU, year, maskfile) {
   
-  maskmap <- raster(paste0("Data/ObservedLCmaps/sim10_BRmunis_latlon_5km_2018-04-27.asc"))
+  maskmap <- raster(maskfile)
   
   LU <- mask(LU, maskmap)
   LU <- trim(LU)
@@ -190,7 +191,7 @@ for(i in seq_along(sim_yrs)){
   
   ObsLU <- raster(paste0("Data/ObservedLCmaps/PlantedArea_brazillc_",cl,"_",sim_yrs[i],".asc"))
 
-  ObsLUmap <- makeObsLUmap(ObsLU, sim_yrs[i])
+  ObsLUmap <- makeObsLUmap(ObsLU, sim_yrs[i], maskpath)
   lul[[1]] <- ObsLUmap
   lul[[2]] <- ModLUmap
   

@@ -12,14 +12,16 @@
 
 rm(list=ls())
 
-scenario <- "testing_2019-08-23b"
+scenario <- "testing_2019-10-29"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
-production <- T
+production <- F
 
 data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been saved
-region_filename <- "region2001_noDC_HD_2019-08-20.csv"
+region_filename <- "region2001_noDC_HD_2019-10-29.csv"
 
+maskpath <- "Data/ObservedLCmaps/sim10_BRmunis_latlon_5km.asc"
+       
 #specify states to plot (for all states provide empty list)
 states <- c()  #all states
 #states <- c(51) #MT
@@ -28,13 +30,13 @@ if(length(states) > 0){
   state_label = paste(c("_States", states), collapse = "-")
 } else{ state_label = "_States-All" }
 
-yrs <- seq(2001, 2015, 1)        #all years of analysis
-calib_yrs <- c(2001, 2005, 2010, 2015) #years for calibration analysis
+yrs <- seq(2001, 2018, 1)        #all years of analysis
+calib_yrs <- c(2005, 2010, 2015, 2018) #years for calibration analysis
 #calib_yrs <- seq(2001, 2015, 1) #years for calibration analysis
 
 sim_yrs <- c(2001, 2005, 2010, 2015)    #movie made for all these years (will usually be identical to yrs above)
 #sim_yrs <- seq(2001, 2015, 1)   #movie made for all these years (will usually be identical to yrs above)
-fig_yrs <- c(2001, 2005, 2010, 2015) #figures output for only these years 
+fig_yrs <- c(2005, 2010, 2015, 2018) #figures output for only these years 
 #fig_yrs <- seq(2001, 2015, 1)#figures output for only these years 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
@@ -207,9 +209,9 @@ makeModLUmap <- function(LU, year) {
   
 }
 
-makeObsLUmap <- function(LU, year) {
+makeObsLUmap <- function(LU, year, maskfile) {
   
-  maskmap <- raster(paste0("Data/ObservedLCmaps/sim10_BRmunis_latlon_5km_2018-04-27.asc"))
+  maskmap <- raster(maskfile)
   
   LU <- mask(LU, maskmap)
   LU <- trim(LU)
@@ -266,7 +268,7 @@ for(i in seq_along(yrs)){
   output <- read.csv(paste0(data_dir,scenario,"-",runID,"-Cell-",yrs[i],".csv"))
   
   #load empirical map summary data (created using summarise_LCmaps.r)
-  lc <- read.csv(paste0("Data/SummaryTables/LCs",yrs[i],"_PastureB.csv"), header = T)
+  lc <- read.csv(paste0("Data/SummaryTables/LCs",yrs[i],"_PastureB_Disagg.csv"), header = T)
 
   #create df containing only cell and muni data (rename columns) 
   munis<-data.frame(region$X, region$Y, region$muniID)
@@ -834,7 +836,7 @@ for(i in seq_along(sim_yrs)){
   print("readObsLU")
   ObsLU <- raster(paste0("Data/ObservedLCmaps/LandCover",sim_yrs[i],"_",cl,"_Disagg.asc"))
 
-  ObsLUmap <- makeObsLUmap(ObsLU, sim_yrs[i])
+  ObsLUmap <- makeObsLUmap(ObsLU, sim_yrs[i], maskpath)
   lul[[1]] <- ObsLUmap
   lul[[2]] <- ModLUmap
   
