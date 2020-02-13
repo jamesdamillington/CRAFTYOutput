@@ -27,7 +27,7 @@ library(viridisLite)
 library(tidyselect)
 library(viridis)
 
-scenario <- "testing_demand_smoother3"
+scenario <- "testing_demand_smoother3_2020-02-10c"
 runID_ls <- list("0-0")
 
 for(runID in runID_ls){
@@ -35,13 +35,14 @@ for(runID in runID_ls){
   #runID <- "0-0"
   
   cl <- "PastureB"  #classification for observed LU map
+  create_summaries <- T
   production <- F
   
   data_dir <- "C:/Users/k1076631/craftyworkspace/CRAFTY_TemplateCoBRA/output/Brazil/Unknown/"
   #data_dir <- "C:/Users/k1076631/Google Drive/Shared/Crafty Telecoupling/CRAFTY_testing/CRAFTYOutput/Data/"
   #setwd(data_dir)
   #data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been saved
-  region_filename <- "region2001_calibration.csv"
+  region_filename <- "region2001_2020-02-10b.csv"
   
   #maskpath <- "Data/ObservedLCmaps/sim10_BRmunis_latlon_5km.asc"
   maskpath<- paste0(data_dir,"ObservedLCmaps/sim10_BRmunis_latlon_5km.asc")
@@ -54,8 +55,8 @@ for(runID in runID_ls){
     state_label = paste(c("_States", states), collapse = "-")
   } else{ state_label = "_States-All" }
   
-  SC_name <- paste0(data_dir,scenario,"/",runID,"/",scenario,state_label,"_CRAFTYmunisServCap.csv")  #output file name for services and capitals
-  LC_name <- paste0(data_dir,scenario,"/",runID,"/",scenario,state_label,"_CRAFTYmunisLC.csv")  #output file name for land cover data 
+  SC_name <- paste0(data_dir,scenario,"/",runID,"/",scenario,state_label,"_CRAFTYmunisServCap_4class.csv")  #output file name for services and capitals
+  LC_name <- paste0(data_dir,scenario,"/",runID,"/",scenario,state_label,"_CRAFTYmunisLC_4class.csv")  #output file name for land cover data 
   
   
   yrs <- seq(2001, 2018, 1)        #all years of analysis
@@ -272,148 +273,151 @@ for(runID in runID_ls){
   #load the region file (used to match each cell to a municipality)
   region <- read.csv(paste0(data_dir,scenario,"/",runID,"/",region_filename))
   
-  for(i in seq_along(yrs)){
+  if(create_summaries){
     
-    #Load model output data
-    output <- read.csv(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,"-Cell-",yrs[i],".csv"))
+    for(i in seq_along(yrs)){
+      
+      #Load model output data
+      output <- read.csv(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,"-Cell-",yrs[i],".csv"))
+      
+      #load empirical map summary data (created using summarise_LCmaps.r)
+      lc <- read.csv(paste0(data_dir,"SummaryTables/SummaryTable",yrs[i],"_PastureB_Disagg.csv"), header = T)
     
-    #load empirical map summary data (created using summarise_LCmaps.r)
-    lc <- read.csv(paste0(data_dir,"SummaryTables/SummaryTable",yrs[i],"_PastureB_Disagg.csv"), header = T)
-  
-    #create df containing only cell and muni data (rename columns) 
-    munis<-data.frame(region$X, region$Y, region$muniID)
-    munis <- rename_all(munis, .funs = funs(substring(., 8)))  #string "region." prefix using substring function to retain only chars after 8 position (1 index) 
-    #munis <- rename_all(munis, .funs = funs(sub("^region.", "",.)))  #or same as previos line using sub with regex
-  
-    #create new column to indicate state (from first two digits of muniID)
-    munis <- mutate(munis, State = substring(muniID, 1, 2))
+      #create df containing only cell and muni data (rename columns) 
+      munis<-data.frame(region$X, region$Y, region$muniID)
+      munis <- rename_all(munis, .funs = funs(substring(., 8)))  #string "region." prefix using substring function to retain only chars after 8 position (1 index) 
+      #munis <- rename_all(munis, .funs = funs(sub("^region.", "",.)))  #or same as previos line using sub with regex
     
-    #join to add muniID to the CRAFTY output data
-    output <- inner_join(output, munis, by = c("X", "Y"))
+      #create new column to indicate state (from first two digits of muniID)
+      munis <- mutate(munis, State = substring(muniID, 1, 2))
+      
+      #join to add muniID to the CRAFTY output data
+      output <- inner_join(output, munis, by = c("X", "Y"))
+      
+      ##subset to state if necessary
+      if(!is.null(states)){
+        output <- filter(output, State %in% states) 
+      }
+      
+      #***Services and Capitals
+      #aggregate services and capitals to municipality 
+      #(from each row is cell to each row is municipality)
+      services <- getServices(output)
+      capitals <- getCapitals(output)
+      
+      #join mapbiomas (lc) and CRAFTY output (mapFRs) summary tables together
+      sc <- left_join(lc, services, by = "muniID") %>%
+        left_join(., capitals, by = "muniID")
+      
+      #add year column
+      sc<- mutate(sc, Year = yrs[i])
+      
+      if(i == 1) { scDat <- sc }
+      else {  scDat <- bind_rows(scDat, sc) }
+      
+      
+      #***Land Cover
+      #aggregate functional roles (indicative of lcs) to municipality 
+      #(from each row is cell to each row is municipality)
+      FRs <- getFRs(output)
+      
+      #legend for mapbiomas 
+      #1. Nature (FRs 4 and 5, so use FR45)
+      #2. Other Agri (FR6)
+      #3. Arable FRs 1, 2 and 3, so use FR123)
+      #4. Other (FR7)
+      #5. PAsture (FR8)
     
-    ##subset to state if necessary
-    if(!is.null(states)){
-      output <- filter(output, State %in% states) 
+      #subset to get only the FR combos that indicate a specific land cover for municipalities
+      selectedFRs <- c("muniID","FR1236", "FR45", "FR6", "FR7", "FR8") #JM! check this works
+      mapFRs <- dplyr::select(FRs, selectedFRs)
+      
+      #join mapbiomas (lc) and CRAFTY output (mapFRs) summary tables together
+      lcs <- left_join(mapFRs, lc, by = "muniID")
+      
+      #add year column
+      lcs <- mutate(lcs, Year = yrs[i])
+      
+      if(i == 1) { lcDat <- lcs }
+      else {  lcDat <- bind_rows(lcDat, lcs) }
     }
     
-    #***Services and Capitals
-    #aggregate services and capitals to municipality 
-    #(from each row is cell to each row is municipality)
-    services <- getServices(output)
-    capitals <- getCapitals(output)
-    
-    #join mapbiomas (lc) and CRAFTY output (mapFRs) summary tables together
-    sc <- left_join(lc, services, by = "muniID") %>%
-      left_join(., capitals, by = "muniID")
-    
-    #add year column
-    sc<- mutate(sc, Year = yrs[i])
-    
-    if(i == 1) { scDat <- sc }
-    else {  scDat <- bind_rows(scDat, sc) }
+    nms <- c("LC2", "LC3")
+    lcDat <- lcDat %>% 
+      mutate(LC3 = rowSums(dplyr::select(., one_of(nms)))) %>%
+      mutate(LC2 = 0) %>%
+      mutate(FR6 = 0)
     
     
-    #***Land Cover
-    #aggregate functional roles (indicative of lcs) to municipality 
-    #(from each row is cell to each row is municipality)
-    FRs <- getFRs(output)
+    #rename columns using legend above (plus others
+    lcDat <- plyr::rename(lcDat, c(
+      "LC1" = "Obs1",
+      "LC2" = "Obs2",
+      "LC3" = "Obs3",
+      #"LC23" = "Obs3",
+      "LC4" = "Obs4",
+      "LC5" = "Obs5",
+      "FR45" = "Mod1", 
+      "FR6" = "Mod2", 
+      "FR1236" = "Mod3", 
+      "FR7" = "Mod4",
+      "FR8" = "Mod5",
+      "NonNAs" = "cellCount",
+      "NAs" = "NAcellCount"))
     
-    #legend for mapbiomas 
-    #1. Nature (FRs 4 and 5, so use FR45)
-    #2. Other Agri (FR6)
-    #3. Arable FRs 1, 2 and 3, so use FR123)
-    #4. Other (FR7)
-    #5. PAsture (FR8)
-  
-    #subset to get only the FR combos that indicate a specific land cover for municipalities
-    selectedFRs <- c("muniID","FR1236", "FR45", "FR6", "FR7", "FR8") #JM! check this works
-    mapFRs <- dplyr::select(FRs, selectedFRs)
+    #code to add modal cell lc for each muncipality for modelled and predicted LC
+    #mMode and oMode are characters  (the names of the column with greatest proportion)
+    lcDat <- mutate(lcDat, mM = names(lcDat)[max.col(lcDat[2:6])+1L])  #from https://stackoverflow.com/a/37197584
+    lcDat <- mutate(lcDat, oM = names(lcDat)[max.col(lcDat[7:11])+6L])  #edit 6L to get to right columns
     
-    #join mapbiomas (lc) and CRAFTY output (mapFRs) summary tables together
-    lcs <- left_join(mapFRs, lc, by = "muniID")
+    #remove letters from start of mM and oM (returning as integer)
+    lcDat <- mutate(lcDat, ModMode = as.integer(substring(mM, 4)))
+    lcDat <- mutate(lcDat, ObsMode = as.integer(substring(oM, 4)))
     
-    #add year column
-    lcs <- mutate(lcs, Year = yrs[i])
+    #drop column that had letters in
+    lcDat <- lcDat %>%
+      dplyr::select(-c(mM,oM))
     
-    if(i == 1) { lcDat <- lcs }
-    else {  lcDat <- bind_rows(lcDat, lcs) }
+    #if all cells in a muni are abandoned, set all modelled cells to 1 (Nature)
+    lcDat <- lcDat %>%
+      mutate(ModMode = replace(ModMode, ModMode == 2, 1))
+    
+    #comparison of modelled mode vs observed mode (TRUE/FALSE)
+    lcDat <- lcDat[!is.na(lcDat$ObsMode),]
+    lcDat$diffcMode <- lcDat$ModMode != lcDat$ObsMode
+    
+    #calc total prop incorrectly predicted cells (in cells; need to chack ths against Pontius papers)
+    #cannot use sum as that sums entire variable
+    lcDat <- lcDat %>%
+      #mutate(cellDiffcCount = round(cellCount*(abs(Mod1-Obs1) + abs(Mod2-Obs2) + abs(Mod3-Obs3) + abs(Mod4-Obs4) + abs(Mod5-Obs5)))/2) %>%
+      mutate(cellDiffcCount = round(cellCount*(abs(Mod1-Obs1) + abs(Mod3-Obs3) + abs(Mod4-Obs4) + abs(Mod5-Obs5)))/2) %>%
+      mutate(cellDiffcProp = round(cellDiffcCount/cellCount,3))
+    
+    #calc difference in proportion for each LC between Modelled and Observed
+    lcDat <- lcDat %>%
+      mutate(diffcProp1 = round(Mod1 - Obs1, digits = 3)) %>%
+      #mutate(diffcProp2 = round(Mod2 - Obs2, digits = 3)) %>%
+      mutate(diffcProp3 = round(Mod3 - Obs3, digits = 3)) %>%
+      mutate(diffcProp4 = round(Mod4 - Obs4, digits = 3)) %>%
+      mutate(diffcProp5 = round(Mod5 - Obs5, digits = 3))
+    
+    #ensure Year is written as integer (see https://github.com/tidyverse/readr/issues/645)
+    lcDat <- lcDat %>%
+      mutate(Year = as.integer(Year))
+    
+    scDat <- scDat %>%
+      mutate(Year = as.integer(Year))
+    
+    #write data to file
+    readr::write_csv(scDat, path = SC_name)
+    readr::write_csv(lcDat, path = LC_name)
   }
-  
-  nms <- c("LC2", "LC3")
-  lcDat <- lcDat %>% 
-    mutate(LC3 = rowSums(dplyr::select(., one_of(nms)))) %>%
-    mutate(LC2 = 0) %>%
-    mutate(FR6 = 0)
-  
-  
-  #rename columns using legend above (plus others
-  lcDat <- plyr::rename(lcDat, c(
-    "LC1" = "Obs1",
-    "LC2" = "Obs2",
-    "LC3" = "Obs3",
-    #"LC23" = "Obs3",
-    "LC4" = "Obs4",
-    "LC5" = "Obs5",
-    "FR45" = "Mod1", 
-    "FR6" = "Mod2", 
-    "FR1236" = "Mod3", 
-    "FR7" = "Mod4",
-    "FR8" = "Mod5",
-    "NonNAs" = "cellCount",
-    "NAs" = "NAcellCount"))
-  
-  #code to add modal cell lc for each muncipality for modelled and predicted LC
-  #mMode and oMode are characters  (the names of the column with greatest proportion)
-  lcDat <- mutate(lcDat, mM = names(lcDat)[max.col(lcDat[2:6])+1L])  #from https://stackoverflow.com/a/37197584
-  lcDat <- mutate(lcDat, oM = names(lcDat)[max.col(lcDat[7:11])+6L])  #edit 6L to get to right columns
-  
-  #remove letters from start of mM and oM (returning as integer)
-  lcDat <- mutate(lcDat, ModMode = as.integer(substring(mM, 4)))
-  lcDat <- mutate(lcDat, ObsMode = as.integer(substring(oM, 4)))
-  
-  #drop column that had letters in
-  lcDat <- lcDat %>%
-    dplyr::select(-c(mM,oM))
-  
-  #if all cells in a muni are abandoned, set all modelled cells to 1 (Nature)
-  lcDat <- lcDat %>%
-    mutate(ModMode = replace(ModMode, ModMode == 2, 1))
-  
-  #comparison of modelled mode vs observed mode (TRUE/FALSE)
-  lcDat <- lcDat[!is.na(lcDat$ObsMode),]
-  lcDat$diffcMode <- lcDat$ModMode != lcDat$ObsMode
-  
-  #calc total prop incorrectly predicted cells (in cells; need to chack ths against Pontius papers)
-  #cannot use sum as that sums entire variable
-  lcDat <- lcDat %>%
-    #mutate(cellDiffcCount = round(cellCount*(abs(Mod1-Obs1) + abs(Mod2-Obs2) + abs(Mod3-Obs3) + abs(Mod4-Obs4) + abs(Mod5-Obs5)))/2) %>%
-    mutate(cellDiffcCount = round(cellCount*(abs(Mod1-Obs1) + abs(Mod3-Obs3) + abs(Mod4-Obs4) + abs(Mod5-Obs5)))/2) %>%
-    mutate(cellDiffcProp = round(cellDiffcCount/cellCount,3))
-  
-  #calc difference in proportion for each LC between Modelled and Observed
-  lcDat <- lcDat %>%
-    mutate(diffcProp1 = round(Mod1 - Obs1, digits = 3)) %>%
-    #mutate(diffcProp2 = round(Mod2 - Obs2, digits = 3)) %>%
-    mutate(diffcProp3 = round(Mod3 - Obs3, digits = 3)) %>%
-    mutate(diffcProp4 = round(Mod4 - Obs4, digits = 3)) %>%
-    mutate(diffcProp5 = round(Mod5 - Obs5, digits = 3))
-  
-  #ensure Year is written as integer (see https://github.com/tidyverse/readr/issues/645)
-  lcDat <- lcDat %>%
-    mutate(Year = as.integer(Year))
-  
-  scDat <- scDat %>%
-    mutate(Year = as.integer(Year))
-  
-  #write data to file
-  readr::write_csv(scDat, path = SC_name)
-  readr::write_csv(lcDat, path = LC_name)
   ##### 
   
   #start of 3_LCcalibrationAnalysis_5LCs.r
   #####
   if(pdfprint) {
-    pdf(file = paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_LCcomparisonAnalysis.pdf"))
+    pdf(file = paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_LCcomparisonAnalysis_4class.pdf"))
   }
   
   cDat <- readr::read_csv(LC_name,
@@ -934,11 +938,11 @@ for(runID in runID_ls){
     
     #if we want this year saved as an image 
     if(sim_yrs[i] %in% fig_yrs) {
-    ggsave(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_RasterOutput_AllMaps",sim_yrs[i],".png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
+    ggsave(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_RasterOutput_AllMaps",sim_yrs[i],"_4class.png"), plot = mps[[i]], width=25, height=25, units="cm", dpi = 200)
   
-    ggsave(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_RasterOutput_LUMap",sim_yrs[i],".png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
+    ggsave(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_RasterOutput_LUMap",sim_yrs[i],"_4class.png"), plot = lus[[i]], width=20, height=12.5, units="cm", dpi = 300)
     
-    png(file=paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_NatureAccess",sim_yrs[i],".png"), width=1800, height=1800, units="px")
+    png(file=paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_NatureAccess",sim_yrs[i],"_4class.png"), width=1800, height=1800, units="px")
     p <- levelplot(Aces,
                    col.regions=ras_pal, 
                    at=seq(from=0,to=1,by=0.01), 
@@ -948,7 +952,7 @@ for(runID in runID_ls){
     print(p)
     dev.off()
     
-    png(file=paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_AgriInfrastructure",sim_yrs[i],".png"), width=1800, height=1800, units="px")
+    png(file=paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_AgriInfrastructure",sim_yrs[i],"_4class.png"), width=1800, height=1800, units="px")
     p <- levelplot(AgI,
                    col.regions=ras_pal, 
                    at=seq(from=0,to=1,by=0.01), 
@@ -958,7 +962,7 @@ for(runID in runID_ls){
     print(p)
     dev.off()
     
-    png(file=paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_OAgriInfrastructure",sim_yrs[i],".png"), width=1800, height=1800, units="px")
+    png(file=paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_OAgriInfrastructure",sim_yrs[i],"_4class.png"), width=1800, height=1800, units="px")
     p <- levelplot(OAgI,
                    col.regions=ras_pal, 
                    at=seq(from=0,to=1,by=0.01), 
@@ -981,7 +985,7 @@ for(runID in runID_ls){
     mat_yrs <- head(sim_yrs, -1) #drop last element of the list
     
     
-    output_name <- paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_MapTransitions.pdf")
+    output_name <- paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_MapTransitions_4class.pdf")
   
     pdf(file = output_name)
     
@@ -1057,7 +1061,7 @@ for(runID in runID_ls){
       }
       
       #open png device
-      png(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_MuniOutput_LandUse_",yr,".png"), width=1000, height=1000, res=100)
+      png(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_MuniOutput_LandUse_",yr,"_4class.png"), width=1000, height=1000, res=100)
       
       #create layout (including legend at bottom)
       m <- matrix(c(1,2,3,3),nrow = 2,ncol = 2,byrow = TRUE)
@@ -1090,7 +1094,7 @@ for(runID in runID_ls){
       ps <- scDat_map %>% dplyr::select(meanMoisC, meanNatureC, meanInfraC,meanLandPriceC,meanSoyProteC,meanGSeasonC)
       
       #open png device
-      png(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_MuniOutput_Capitals_",yr,".png"), width=1200, height=1200, res=100)
+      png(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_MuniOutput_Capitals_",yr,"_4class.png"), width=1200, height=1200, res=100)
       
       #create layout
       m <- matrix(c(1,2,3,4,5,6,7,7,7),nrow = 3,ncol = 3,byrow = TRUE)
@@ -1113,7 +1117,7 @@ for(runID in runID_ls){
       
       #####
       #comparison maps of obs and mod proportions
-      png(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_MuniOutput_LUprops_",yr,".png"), width=1000, height=1000, res=100)
+      png(paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_MuniOutput_LUprops_",yr,"_4class.png"), width=1000, height=1000, res=100)
   
       #create layout
       m <- matrix(c(1,2,3,4,5,6,7,7),nrow = 4,ncol = 2,byrow = TRUE)
