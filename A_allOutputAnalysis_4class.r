@@ -27,7 +27,7 @@ library(viridisLite)
 library(tidyselect)
 library(viridis)
 
-scenario <- "testing_demand_smoother3_2020-02-10c"
+scenario <- "testing_demand_smoother3_2020-02-13"
 runID_ls <- list("0-0")
 
 for(runID in runID_ls){
@@ -42,7 +42,7 @@ for(runID in runID_ls){
   #data_dir <- "C:/Users/k1076631/Google Drive/Shared/Crafty Telecoupling/CRAFTY_testing/CRAFTYOutput/Data/"
   #setwd(data_dir)
   #data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been saved
-  region_filename <- "region2001_2020-02-10b.csv"
+  region_filename <- "region2001_2020-02-13.csv"
   
   #maskpath <- "Data/ObservedLCmaps/sim10_BRmunis_latlon_5km.asc"
   maskpath<- paste0(data_dir,"ObservedLCmaps/sim10_BRmunis_latlon_5km.asc")
@@ -59,7 +59,7 @@ for(runID in runID_ls){
   LC_name <- paste0(data_dir,scenario,"/",runID,"/",scenario,state_label,"_CRAFTYmunisLC_4class.csv")  #output file name for land cover data 
   
   
-  yrs <- seq(2001, 2018, 1)        #all years of analysis
+  yrs <- seq(2001, 2017, 1)        #all years of analysis
   calib_yrs <- c(2005, 2010, 2015) #years for calibration analysis
   #calib_yrs <- seq(2015, 2016, 1) #years for calibration analysis
   
@@ -782,7 +782,7 @@ for(runID in runID_ls){
   
   
   if(pdfprint) {
-    pdf(file = paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_LCcomparisonMaps.pdf"))
+    pdf(file = paste0(data_dir,scenario,"/",runID,"/",scenario,"-",runID,state_label,"_LCcomparisonMaps_4class.pdf"))
   }
   
   ## Maps
