@@ -15,33 +15,37 @@
 
 rm(list=ls())
 
-scenario <- "ClimateRCP85-50_noGS_DemandConst2015"
-scenario_short <- "Climate RCP85"
+scenario <- "scenario_observed_2001-2035_2020-02-13"
+scenario_short <- "scenario constant"
 runID <- "0-0"
 cl <- "PastureB"  #classification for observed LU map
 
-data_dir <- paste0("Data/",scenario,"/",runID,"/")  #where output data have been saved
-region_filename <- "region2015.csv"
+path <- "C:/Users/k1076631/craftyworkspace/CRAFTY_TemplateCoBRA/output/Brazil/Unknown/"
+#path<- "Data/" #where output data have been saved
+
+
+data_dir <- paste0(path,scenario,"/",runID,"/")  #where output data have been saved
+region_filename <- "region2001_2020-02-10b.csv"
 
 #specify states to plot (for all states provide empty list)
-#states <- c()  #all states
-states <- c(51) #MT
+states <- c()  #all states
+#states <- c(51) #MT
 
 if(length(states) > 0){
   state_label = paste(c("_States", states), collapse = "-")
 } else{ state_label = "_States-All" }
 
-yrs <- seq(2015, 2050, 1)       #all years of analysis
-sim_yrs <- c(2016, 2020, 2025, 2030, 2035, 2040, 2045, 2050)   #movie made for all these years (will usually be identical to yrs above)
-fig_yrs <- c(2016, 2020, 2025, 2030, 2035, 2040, 2045, 2050)  #figures output for only these years 
+yrs <- seq(2001, 2035, 1)       #all years of analysis
+sim_yrs <- c(2010, 2018, 2023, 2028, 2033)   #movie made for all these years (will usually be identical to yrs above)
+fig_yrs <- c(2010, 2018, 2023, 2028, 2033)  #figures output for only these years 
 #fig_yrs <- c(2015, 2016, 2017)  #figures output for only these years 
 
 #calibration analysis output can be printed to pdf by setting following variable appropriately (TRUE/FALSE)
-pdfprint <- F
-ras_video_output <- T
+pdfprint <- T
+ras_video_output <- F
 muni_video_output <- F
 comp_matrices <- F
-production <- T
+production <- F
 
 #required packages
 library(tidyverse)
@@ -288,7 +292,7 @@ for(i in seq_along(yrs)){
   output <- read.csv(paste0(data_dir,scenario,"-",runID,"-Cell-",yrs[i],".csv"))
   
   #load municipality cell counts
-  lc <- read.csv(paste0("Data/MuniCellCounts.csv"), header = T)
+  lc <- read.csv(paste0(path,"MuniCellCounts.csv"), header = T)
 
   #create df containing only cell and muni data (rename columns) 
   munis<-data.frame(region$X, region$Y, region$muniID)
@@ -363,7 +367,7 @@ for(i in seq_along(yrs)){
 #   "FR8" = "Mod5",
    "NonNAs" = "cellCount"))
 
-#code to add modal cell lc for each muncipality for modelled and observed LC
+#code to add modal cell lc for each muncipality for modelled and observed LUC
 #mMode and oMode are characters  (the names of the column with greatest proportion)
 lcDat <- mutate(lcDat, mM = names(lcDat)[max.col(lcDat[2:8])+1L])  #from https://stackoverflow.com/a/37197584
 #lcDat <- mutate(lcDat, oM = names(lcDat)[max.col(lcDat[7:11])+6L])  #edit 6L to get to right columns
@@ -420,48 +424,42 @@ cDat <- cDat %>%
 
 #timeseries plots
 cDat <- cDat %>%
-  mutate(Soy.Mod = round(FR1 * cellCount * 2500,0)) %>%
-  mutate(Mze.Mod = round(FR2 * cellCount * 2500,0)) %>%
-  mutate(DC.Mod = round(FR3 * cellCount * 2500,0)) %>%
-  mutate(Nat.Mod = round(FR45 * cellCount * 2500,0)) %>%
-  mutate(OAgri.Mod = round(FR6 * cellCount * 2500,0)) %>%
-  mutate(Other.Mod = round(FR7 * cellCount * 2500,0)) %>%
-  mutate(Pas.Mod = round(FR8 * cellCount * 2500,0)) #%>%
+  mutate(Soy.Mod = round(FR1 * cellCount * 25,0)) %>%
+  mutate(Mze.Mod = round(FR2 * cellCount * 25,0)) %>%
+  mutate(DC.Mod = round(FR3 * cellCount * 25,0)) %>%
+  mutate(Nat.Mod = round(FR45 * cellCount * 25,0)) %>%
+  mutate(OAgri.Mod = round(FR6 * cellCount * 25,0)) %>%
+  mutate(Other.Mod = round(FR7 * cellCount * 25,0)) %>%
+  mutate(Pas.Mod = round(FR8 * cellCount * 25,0)) #%>%
 
 
 #long version
 cDat_long_mod <- cDat %>%
   dplyr::select(Year, state:Pas.Mod) %>%
-  gather(key = LC, value = hectares, -Year, -state) %>% 
-  group_by(Year,LC) %>%
-  summarise_at(vars(matches("hectares")),funs(sum((.), na.rm=TRUE))) %>%
-  mutate(source = "Mod")
+  gather(key = LUC, value = sqkm, -Year, -state) %>% 
+  group_by(Year,LUC) %>%
+  summarise_at(vars(matches("sqkm")),sum, na.rm=TRUE) %>%
+  mutate(Source = "Mod")
 
 
 cDat_long_mod <- cDat_long_mod %>%
-  mutate(LC = 
-      if_else(LC == "Soy.Mod", "Soy",
-        if_else(LC == "Mze.Mod", "Maize",
-          if_else(LC == "DC.Mod", "DoubleC",
-            if_else(LC == "Nat.Mod", "Nature",
-              if_else(LC == "OAgri.Mod", "OtherAgri",
-                if_else(LC == "Other.Mod", "Other",
+  mutate(LUC = 
+      if_else(LUC == "Soy.Mod", "Soy",
+        if_else(LUC == "Mze.Mod", "Maize",
+          if_else(LUC == "DC.Mod", "DoubleC",
+            if_else(LUC == "Nat.Mod", "Nature",
+              if_else(LUC == "OAgri.Mod", "OtherAgri",
+                if_else(LUC == "Other.Mod", "Other",
                   "Pasture"
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-    
+    ))))))) %>%
+  mutate(LUC = factor(LUC, c(levels = c("Soy","Maize","DoubleC","OtherAgri","Other","Pasture","Nature"))))
 
 c <- cDat_long_mod %>% 
-  ggplot(aes(x = Year, y = hectares,color = LC, linetype = source)) + 
+  ggplot(aes(x = Year, y = sqkm,color = LUC, linetype = Source)) + 
   geom_line(size = 1) +
-  scale_colour_manual(name = "LC",values = myCols) +
-  scale_y_continuous(name = "Hectares", labels = scales::comma, limits=c(0,225000000)) +
-  ggtitle(scenario)
+  scale_colour_manual(name = "LUC",values = myCols) +
+  scale_y_continuous(name = "Area (sq km)", labels = scales::comma, limits=c(0,2250000)) 
+  #ggtitle(scenario_short)
 print(c)
 
 
@@ -473,7 +471,7 @@ if(pdfprint) {
 #start of 4_LCcalibrationMaps_5LCs.r
 #####
 
-#function to get correct LC pallete colours (e.g. if a given LC is missing) 
+#function to get correct LUC pallete colours (e.g. if a given LUC is missing) 
 lc_pal_function <- function(dat){
   
   pal <- c()
@@ -497,7 +495,7 @@ lc_labs <- c("Soy","Maize","DoubleC","Nature", "Other Agri", "Other", "Pasture")
 cDat <- read_cDat()   #function so col types can be modified once 
 
 #note following shp was created using simplyfying_shapefiles.r
-BRmunis <- st_read("Data/Vector/BRmunis_sim10_simple2.shp")
+BRmunis <- st_read(paste0(path,"Vector/BRmunis_sim10_simple2.shp"))
 
 
 if(pdfprint) {
@@ -522,7 +520,7 @@ for(yr in fig_yrs){
 
   #plot modal modal muni land cover
   temp_pal <- lc_pal_function(cDat_map["ModMode"])  #create land cover palette
-  plot(cDat_map["ModMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LC"), key.pos = NULL, reset=F)
+  plot(cDat_map["ModMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LUC"), key.pos = NULL, reset=F)
 
   #add legend
   par(mar=c(0,0,0,0))
@@ -739,7 +737,7 @@ for(yr in sim_yrs){
     
     #plot modal modal muni land cover
     temp_pal <- lc_pal_function(cDat_map["ModMode"])  #create land cover palette
-    plot(cDat_map["ModMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LC"), key.pos = NULL, reset=F)
+    plot(cDat_map["ModMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LUC"), key.pos = NULL, reset=F)
 
     #add legend
     par(mar=c(0,0,0,0))
@@ -819,7 +817,7 @@ for(yr in sim_yrs){
 
 if(muni_video_output)
 {
-  #Now create LC video
+  #Now create LUC video
   saveVideo(
     for(yr in sim_yrs){
    
@@ -836,7 +834,7 @@ if(muni_video_output)
       
       #plot modal modal muni land cover
       temp_pal <- lc_pal_function(cDat_map["ModMode"])  #create land cover palette
-      plot(cDat_map["ModMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LC"), key.pos = NULL, reset=F)
+      plot(cDat_map["ModMode"], pal = temp_pal, graticule = st_crs(cDat_map), axes = TRUE, lty = 0, main = paste(yr,"Modelled Mode LUC"), key.pos = NULL, reset=F)
   
       #add legend
       par(mar=c(0,0,0,0))
@@ -1001,7 +999,7 @@ if(length(states) == 0)
       )
   
   obs_long <- bind_rows(Dairy_long, Maize_long, Soy_long, Meat_long) %>%
-   mutate(source = "Obs")
+   mutate(Source = "Obs")
   
   
   #empty table to populate from files below
@@ -1064,17 +1062,17 @@ if(length(states) == 0)
   
   #combine
   mod_dat <- bind_rows(mod_dat, internal, external)  %>%
-    mutate(source = "Modelled")
+    mutate(Source = "Modelled")
   
   mod_dat <- mod_dat %>%
-    dplyr::select(year, commodity, measure, source, value_gg) 
+    dplyr::select(year, commodity, measure, Source, value_gg) 
   
   obs_long <- obs_long %>%
-    dplyr::select(year, commodity, measure, source, value_gg)
+    dplyr::select(year, commodity, measure, Source, value_gg)
   
   
   all_dat <- bind_rows(mod_dat, obs_long) %>%
-    mutate(source = factor(source), measure = factor(measure), commodity = factor(commodity))
+    mutate(source = factor(Source), measure = factor(measure), commodity = factor(commodity))
     
   #write all_dat to csv
   write_csv(all_dat, outputcsv_name)
@@ -1118,7 +1116,7 @@ if(length(states) == 0)
   #timelines of production, storage, export by commodity
   a <- all_dat %>% 
     filter(commodity == "Soy") %>%
-    ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+    ggplot(aes(x=year, y=value_gg, color=measure, linetype=Source)) +
     geom_line() +
     scale_colour_manual(values=cbPalette) +
     scale_y_continuous(labels = scales::comma, limits=c(0,150000)) +
@@ -1130,7 +1128,7 @@ if(length(states) == 0)
   
   a <- all_dat %>% 
     filter(commodity == "Maize") %>%
-    ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+    ggplot(aes(x=year, y=value_gg, color=measure, linetype=Source)) +
     geom_line() +
     scale_colour_manual(values=cbPalette) +
     scale_y_continuous(labels = scales::comma, limits=c(0,150000)) +
@@ -1141,7 +1139,7 @@ if(length(states) == 0)
   
   a <- all_dat %>% 
     filter(commodity == "Meat") %>%
-    ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+    ggplot(aes(x=year, y=value_gg, color=measure, linetype=Source)) +
     geom_line() +
     scale_colour_manual(values=cbPalette) +
     scale_y_continuous(labels = scales::comma, limits=c(0,15000)) +
@@ -1152,7 +1150,7 @@ if(length(states) == 0)
   
   # a <- all_dat %>%
   #   filter(commodity == "Dairy") %>%
-  #   ggplot(aes(x=year, y=value_gg, color=measure, linetype=source)) +
+  #   ggplot(aes(x=year, y=value_gg, color=measure, linetype=Source)) +
   #   geom_line() +
   #   scale_colour_manual(values=cbPalette) +
   #   ylab("Value (gg)") +
