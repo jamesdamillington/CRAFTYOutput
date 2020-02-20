@@ -1,5 +1,5 @@
 # CRAFTYOutput
-**Scripts to analyse output from CRAFTY (Brazil)**
+**Scripts to analyse output from the [CRAFTY Brazil](https://github.com/jamesdamillington/CRAFTY_Brazil) ABM simulation model**
 
 The [individual analysis scripts](#individual-analysis-scripts) described below produce numerous model output analysis files. Many scripts have dependencies on files produced by other scripts. The number prefixing a filename (e.g. 1_summarise...) indicates the order in which files should be excuted.
 
